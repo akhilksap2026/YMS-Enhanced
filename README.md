@@ -67,3 +67,7 @@ Screenshots (light and dark): `screenshots/v4/`. To regenerate them, run `python
 ### Known limits
 - Reset codes are held in memory, so a restart cancels them.
 - The demo simulation and the SAP/OTM integration worker run on the default site only.
+
+## Design system (v1.2)
+Applied: Action Blue `#1258B5` accent (light) / navy dark theme, radii, soft shadows, Montserrat UI font and IBM Plex Mono for IDs (bundled locally via @fontsource, weights 400/600 only), line-height token. Sizes, spacing, row heights and layout are deliberately unchanged (owner decision) — no 12px minimum enforced. Map background is flat.
+**Documented exception:** yard status colours (`--c-ok`, `--c-reefer`, `--c-haz`, `--c-hold`, `--c-late`, `--c-bad`, `--c-live`) are operational semantics, theme-independent, and are not mapped to brand colours.

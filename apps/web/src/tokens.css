@@ -1,36 +1,38 @@
 /* YMSNow design tokens v2. Two themes share one token set; components only read tokens. */
 :root {
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
-  --r-1: 4px; --r-2: 6px; --r-3: 8px; --r-4: 14px;
-  --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r-1: 4px; --r-2: 6px; --r-3: 8px; --r-4: 12px;
+  --lh: 1.35; --lh-tight: 1.2; --w-regular: 400; --w-strong: 600;
+  --font: "Montserrat", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --fs-xs: 10.5px; --fs-sm: 11.5px; --fs-md: 12.5px; --fs-lg: 15px; --fs-xl: 24px;
   --row-h: 28px; --ctl-h: 28px; --rail-w: 56px; --rail-wide: 212px; --top-h: 44px;
   --ease: cubic-bezier(.2,.7,.2,1); --dur: 180ms;
-  /* status hues are theme-independent so the yard reads the same in both modes */
-  --c-ok: #3fb950; --c-reefer: #4cc3ff; --c-haz: #f7d046; --c-hold: #fb8c3c; --c-late: #f0b429; --c-bad: #f2555a; --c-live: #2dd4bf; --c-acc: #f5a524;
+  /* Documented exception to the design system: yard status hues (ok/reefer/hazmat/hold/late/bad/live) are
+     operational semantics, theme-independent so the yard reads the same in both modes. Do not remap to brand colours. */
+  --c-ok: #3fb950; --c-reefer: #4cc3ff; --c-haz: #f7d046; --c-hold: #fb8c3c; --c-late: #f0b429; --c-bad: #f2555a; --c-live: #2dd4bf; --c-acc: #3d8bfd;
 }
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a0e13; --bg-2: #0e131a; --surface: #121922; --surface-2: #17202b; --sunken: #0e131a; --rail: #080b10;
-  --line: #1f2a36; --line-strong: #2a3746;
+  --bg: #0b1426; --bg-2: #0e1830; --surface: #111d36; --surface-2: #16243f; --sunken: #0d172c; --rail: #091121;
+  --line: #1e2d4a; --line-strong: #2a3c5e;
   --text: #e6edf3; --text-2: #a3b1bf; --text-3: #7a8a9a;
-  --accent: #f5a524; --accent-ink: #14100a; --accent-weak: rgba(245,165,36,.10); --focus: #f5a524;
+  --accent: #4f8fe6; --accent-ink: #ffffff; --accent-weak: rgba(79,143,230,.14); --focus: #6aa3f0;
   --ok: #7ee29a; --ok-bg: rgba(63,185,80,.14); --warn: #ffd166; --warn-bg: rgba(240,180,41,.14);
   --hold: #ffb27a; --hold-bg: rgba(251,140,60,.15); --bad: #ff8f92; --bad-bg: rgba(242,85,90,.15);
-  --info: #8fd8ff; --info-bg: rgba(76,195,255,.14); --idle: #a3b1bf; --idle-bg: #1d2733; --live: #7ff0de; --live-bg: rgba(45,212,191,.12);
-  --shadow: 0 10px 30px rgba(0,0,0,.45); --scrim: rgba(3,6,9,.55);
-  --map-bg: radial-gradient(1200px 700px at 45% 40%, #121a24 0, #0a0e13 70%); --map-ground: #0f151d; --map-grid: #141c26; --map-road: #151e29; --map-slot: #253242; --map-label: #6f7f8f; --map-bldg: #273444; --map-unit: #5b6b7e; --map-empty: #3d4a59;
+  --info: #8fd8ff; --info-bg: rgba(76,195,255,.14); --idle: #a3b1bf; --idle-bg: #1b2a45; --live: #7ff0de; --live-bg: rgba(45,212,191,.12);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.35); --shadow: 0 8px 24px rgba(2,6,16,.5); --scrim: rgba(3,7,16,.55);
+  --map-bg: #0b1426; --map-ground: #0f1a2f; --map-grid: #14213a; --map-road: #16233d; --map-slot: #26365a; --map-label: #7385a3; --map-bldg: #283a5c; --map-unit: #5b6b7e; --map-empty: #3d4a59;
 }
 [data-theme="light"] {
   color-scheme: light;
   --bg: #eef1f4; --bg-2: #f7f8fa; --surface: #ffffff; --surface-2: #f4f6f8; --sunken: #e9edf1; --rail: #ffffff;
   --line: #e1e6eb; --line-strong: #cdd5dd;
   --text: #121821; --text-2: #48535f; --text-3: #66717d;
-  --accent: #c97a00; --accent-ink: #ffffff; --accent-weak: rgba(201,122,0,.10); --focus: #c97a00;
+  --accent: #1258B5; --accent-ink: #ffffff; --accent-weak: rgba(18,88,181,.10); --focus: #1258B5;
   --ok: #1d7a46; --ok-bg: #e3f3e9; --warn: #8a5a00; --warn-bg: #fdf0d3;
   --hold: #a34a00; --hold-bg: #fde4d0; --bad: #b42318; --bad-bg: #fbe3e1;
   --info: #0b6aa2; --info-bg: #e1f1fb; --idle: #56616d; --idle-bg: #eceff2; --live: #0f7f72; --live-bg: #dcf5f1;
-  --shadow: 0 10px 30px rgba(20,30,45,.14); --scrim: rgba(20,28,38,.28);
-  --map-bg: radial-gradient(1200px 700px at 45% 40%, #f8fafc 0, #e6ebf0 75%); --map-ground: #dde3e9; --map-grid: #d3dae1; --map-road: #ccd4dc; --map-slot: #b9c3cd; --map-label: #5d6975; --map-bldg: #aeb9c4; --map-unit: #8696a7; --map-empty: #b8c3ce;
+  --shadow-sm: 0 1px 2px rgba(16,32,64,.08); --shadow: 0 8px 24px rgba(16,32,64,.12); --scrim: rgba(20,28,38,.28);
+  --map-bg: #eef1f5; --map-ground: #dde3e9; --map-grid: #d3dae1; --map-road: #ccd4dc; --map-slot: #b9c3cd; --map-label: #5d6975; --map-bldg: #aeb9c4; --map-unit: #8696a7; --map-empty: #b8c3ce;
 }
