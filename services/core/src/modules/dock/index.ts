@@ -1,10 +1,10 @@
 import { Router } from "express";
 import type { Door } from "../../../../../packages/contracts/index.ts";
-import { memoryRepo } from "../../shared/repo.ts";
-import { doors as seed } from "../../seed.ts";
+import { tenantRepo } from "../../shared/repo.ts";
+import { seedOf } from "../../seedcache.ts";
 import { units } from "../yard/index.ts";
 import { publish } from "../../shared/bus.ts";
-export const doors = memoryRepo<Door>(seed);
+export const doors = tenantRepo<Door>("doors", (t) => seedOf(t, "doors"));
 export function assign(doorId: string, unitId: string) {
   const d = doors.get(doorId); const u = units.get(unitId);
   if (!d || !u) throw Object.assign(new Error("Not found"), { status: 404 });
@@ -12,7 +12,7 @@ export function assign(doorId: string, unitId: string) {
   if (u.status === "hold" || u.status === "quarantine") throw Object.assign(new Error("Unit on " + u.status), { status: 409 });
   for (const o of doors.all()) if (o.unitId === unitId) { o.unitId = undefined; o.state = "free"; }
   Object.assign(d, { state: "occupied", unitId, since: new Date().toISOString() }); u.location = d.label;
-  publish({ type: "DoorOccupied", aggregateId: d.id, aggregateVersion: 1, payload: { doorId: d.id, unitId } } as any);
+  publish({ type: "DoorOccupied", aggregateId: d.id, aggregateVersion: 1, payload: { doorId: d.id, doorLabel: d.label, unitId } } as any);
   return d;
 }
 export function release(doorId: string) {

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import type { Charge, ChargeState } from "../../../../../packages/contracts/index.ts";
-import { memoryRepo } from "../../shared/repo.ts";
-import { charges as seed } from "../../seed.ts";
+import { tenantRepo } from "../../shared/repo.ts";
+import { seedOf } from "../../seedcache.ts";
 import { publish } from "../../shared/bus.ts";
-export const charges = memoryRepo<Charge>(seed);
+export const charges = tenantRepo<Charge>("charges", (t) => seedOf(t, "charges"));
 const allowed: Record<ChargeState, ChargeState[]> = {
   indicative: ["approved", "adjusted", "rejected", "under_review"], under_review: ["approved", "adjusted", "rejected"],
   adjusted: ["approved", "rejected"], approved: ["exported"], rejected: [], exported: [],

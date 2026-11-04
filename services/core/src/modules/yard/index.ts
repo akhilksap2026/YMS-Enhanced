@@ -1,15 +1,19 @@
 import { Router } from "express";
 import type { Unit, Zone } from "../../../../../packages/contracts/index.ts";
-import { memoryRepo } from "../../shared/repo.ts";
-import { units as useed, zones as zseed, carriers, exceptions } from "../../seed.ts";
-export const units = memoryRepo<Unit>(useed);
-export const zones = memoryRepo<Zone>(zseed);
+import { tenantRepo } from "../../shared/repo.ts";
+import { seedOf } from "../../seedcache.ts";
+import type { Carrier, ExceptionItem } from "../../../../../packages/contracts/index.ts";
+export const units = tenantRepo<Unit>("units", (t) => seedOf(t, "units"));
+export const zones = tenantRepo<Zone>("zones", (t) => seedOf(t, "zones"))
+export const carriers = tenantRepo<Carrier>("carriers", (t) => seedOf(t, "carriers"));
+export const exceptions = tenantRepo<ExceptionItem>("exceptions", (t) => seedOf(t, "exceptions"));
+export const raise = (x: Omit<ExceptionItem, "id" | "at"> & { id?: string }) => exceptions.put({ id: "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: new Date().toISOString(), ...x });;
 const wrap = (r: any, f: () => unknown) => { try { r.json(f()); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } };
 /** Place or lift an operational hold. Quarantine is not lifted here (needs inspection workflow). */
 export function setHold(id: string, on: boolean, reason?: string) {
   const u = units.get(id); if (!u) throw Object.assign(new Error("Not found"), { status: 404 });
   if (u.status === "quarantine") throw Object.assign(new Error("Unit is quarantined; inspection required"), { status: 409 });
-  if (on) { if (u.status === "hold") throw Object.assign(new Error("Already on hold"), { status: 409 }); u.status = "hold"; exceptions.unshift({ id: "x" + Date.now(), severity: "med", text: `${u.number} placed on hold${reason ? ": " + reason : ""}`, unitId: u.id, at: new Date().toISOString() }); }
+  if (on) { if (u.status === "hold") throw Object.assign(new Error("Already on hold"), { status: 409 }); u.status = "hold"; raise({ severity: "med", text: `${u.number} placed on hold${reason ? ": " + reason : ""}`, unitId: u.id }); }
   else { if (u.status !== "hold") throw Object.assign(new Error("Unit is not on hold"), { status: 409 }); u.status = "ok"; }
   return u;
 }
@@ -19,8 +23,8 @@ export function vacate(unitId: string) { for (const z of zones.all()) for (const
 export const router = Router()
   .get("/units", (_q, r) => r.json(units.all()))
   .get("/zones", (_q, r) => r.json(zones.all()))
-  .get("/carriers", (_q, r) => r.json(carriers))
-  .get("/exceptions", (_q, r) => r.json(exceptions))
+  .get("/carriers", (_q, r) => r.json(carriers.all()))
+  .get("/exceptions", (_q, r) => r.json(exceptions.all().sort((a, b) => b.at.localeCompare(a.at))))
   .post("/units/:id/hold", (q, r) => wrap(r, () => setHold(q.params.id, true, q.body?.reason)))
   .post("/units/:id/release", (q, r) => wrap(r, () => setHold(q.params.id, false)))
-  .post("/exceptions/:id/ack", (q, r) => { const i = exceptions.findIndex((e) => e.id === q.params.id); if (i >= 0) exceptions.splice(i, 1); r.json({ ok: true }); });
+  .post("/exceptions/:id/ack", (q, r) => { exceptions.del(q.params.id); r.json({ ok: true }); });

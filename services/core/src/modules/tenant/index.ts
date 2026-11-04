@@ -1,7 +1,20 @@
 import { Router } from "express";
 import type { AppointmentSource } from "../../../../../packages/contracts/index.ts";
-export const tenant = { id: "t-demo", name: "Demo Tenant (fictitious)" };
-export const sites = [{ id: "s-rsr", name: "Riverside DC (demo)", tz: "Africa/Bujumbura" }, { id: "s-nth", name: "North Cross-dock (demo)", tz: "Africa/Bujumbura" }];
-export const siteConfig: { appointmentSource: AppointmentSource; features: Record<string, boolean> } = { appointmentSource: "native", features: { kiosk: true, ai: false } };
-export const router = Router().get("/", (_q, r) => r.json({ tenant, sites, siteConfig }))
-  .patch("/config", (q, r) => { Object.assign(siteConfig, q.body); r.json(siteConfig); });
+import { tenantRepo } from "../../shared/repo.ts";
+import { seedOf } from "../../seedcache.ts";
+import { tid } from "../../shared/tenancy.ts";
+export type SiteConfig = ReturnType<typeof seedOf<"settings">>[number] & { appointmentSource: AppointmentSource };
+export const settings = tenantRepo<SiteConfig>("settings", (t) => seedOf(t, "settings") as SiteConfig[]);
+export const siteConfig = () => settings.get("site")!;
+export const TENANT_NAMES: Record<string, string> = { "t-ksap": "Ksap Riverside (operations)", "t-demo": "Demo workspace" };
+const EDITABLE = ["appointmentSource", "features", "brandName", "brandLogo", "rates", "siteName"] as const;
+export function patchConfig(body: Record<string, unknown>) {
+  const c = siteConfig();
+  if (body.appointmentSource && !["native", "sap", "otm"].includes(String(body.appointmentSource))) throw Object.assign(new Error("Unknown appointment source"), { status: 422 });
+  if (typeof body.brandLogo === "string" && body.brandLogo.length > 200_000) throw Object.assign(new Error("Logo too large (max ~150 KB)"), { status: 413 });
+  for (const k of EDITABLE) if (k in body) (c as any)[k] = body[k];
+  return settings.put(c);
+}
+export const router = Router()
+  .get("/", (_q, r) => { const c = siteConfig(); r.json({ tenant: { id: tid(), name: TENANT_NAMES[tid()] ?? tid(), demo: tid() === "t-demo" }, sites: [{ id: "s-rsr", name: c.siteName, tz: "Africa/Bujumbura" }], siteConfig: c }); })
+  .patch("/config", (q, r) => { try { r.json(patchConfig(q.body ?? {})); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });

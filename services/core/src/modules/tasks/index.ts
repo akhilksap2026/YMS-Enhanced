@@ -1,11 +1,11 @@
 import { Router } from "express";
 import type { Task } from "../../../../../packages/contracts/index.ts";
-import { memoryRepo } from "../../shared/repo.ts";
-import { tasks as seed } from "../../seed.ts";
+import { tenantRepo } from "../../shared/repo.ts";
+import { seedOf } from "../../seedcache.ts";
 import { publish } from "../../shared/bus.ts";
 import { units, slotByLabel, vacate } from "../yard/index.ts";
 import { doors, assign as assignDoor } from "../dock/index.ts";
-export const tasks = memoryRepo<Task>(seed);
+export const tasks = tenantRepo<Task>("tasks", (t) => seedOf(t, "tasks"));
 /** Offline-safe transition: client sends the version it saw. Superseded completions are accepted as facts and flagged. */
 export function transition(id: string, to: Task["status"], seenVersion: number, assignee?: string) {
   const t = tasks.get(id); if (!t) throw Object.assign(new Error("Not found"), { status: 404 });

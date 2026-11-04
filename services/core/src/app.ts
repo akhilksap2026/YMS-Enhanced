@@ -8,9 +8,14 @@ import * as dock from "./modules/dock/index.ts";
 import * as tasks from "./modules/tasks/index.ts";
 import * as detention from "./modules/detention/index.ts";
 import * as notifications from "./modules/notifications/index.ts";
+import * as auth from "./modules/auth/index.ts";
+import * as admin from "./modules/admin/index.ts";
+import * as demo from "./modules/demo/index.ts";
 import { log } from "./shared/bus.ts";
-export const app = express().use(cors()).use(express.json())
+import { tid } from "./shared/tenancy.ts";
+export const app = express().use(cors()).use(express.json({ limit: "1mb" })).get("/health", (_q, r) => r.json({ ok: true })).use("/v1", auth.authn)
+  .use("/v1/auth", auth.router).use("/v1/admin", admin.router).use("/v1/demo", demo.router)
   .use("/v1/tenant", tenant.router).use("/v1/appointments", appts.router).use("/v1/gate", gate.router)
   .use("/v1/yard", yard.router).use("/v1/dock", dock.router).use("/v1/tasks", tasks.router)
   .use("/v1/detention", detention.router).use("/v1/notifications", notifications.router)
-  .get("/v1/events", (_q, r) => r.json(log.slice(-100))).get("/health", (_q, r) => r.json({ ok: true }));
+  .get("/v1/events", (_q, r) => r.json(log.filter((e) => e.tenantId === tid()).slice(-100)));

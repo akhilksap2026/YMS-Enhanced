@@ -1,0 +1,11 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+export type Principal = { userId: string; tenantId: string; role: Role; name: string; carrierId?: string; demo?: boolean };
+export const ROLES = ["yard_manager", "gate_guard", "dock_supervisor", "spotter", "carrier", "tenant_admin", "detention_approver"] as const;
+export type Role = (typeof ROLES)[number];
+export const DEFAULT_TENANT = process.env.YMS_TENANT ?? "t-ksap";
+export const DEMO_TENANT = "t-demo";
+const als = new AsyncLocalStorage<{ tenantId: string; user?: Principal }>();
+export const runAs = <T,>(tenantId: string, f: () => T, user?: Principal) => als.run({ tenantId, user }, f);
+export const tid = () => als.getStore()?.tenantId ?? DEFAULT_TENANT;
+export const currentUser = () => als.getStore()?.user;
+export const enterTenant = (tenantId: string, user?: Principal) => als.enterWith({ tenantId, user });
