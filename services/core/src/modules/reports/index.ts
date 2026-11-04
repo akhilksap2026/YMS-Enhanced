@@ -74,7 +74,7 @@ export function scorecards(f: Filter) {
     const onTimePct = total ? Math.round((onTime / total) * 100) : 0; const noShowPct = total ? Math.round((noShow / total) * 100) : 0; const avgTurn = turns.length ? r1(turns.reduce((p, q) => p + q, 0) / turns.length) : 0;
     const score = total ? Math.max(0, Math.round(onTimePct * 0.6 + (100 - noShowPct * 4) * 0.25 + Math.max(0, 100 - avgTurn * 4) * 0.15)) : 0;
     return { carrier: c.name, scac: c.scac, appointments: total, onTimePct, latePct: total ? 100 - onTimePct - noShowPct : 0, noShowPct, avgLateMin: arrived.length ? Math.round(arrived.filter((m) => m > 15).reduce((p, q) => p + q, 0) / Math.max(1, arrived.filter((m) => m > 15).length)) : 0, avgTurnHours: avgTurn, detention: ch.find((x) => x.carrier === c.name)?.amount ?? 0, score, grade: score >= 85 ? "A" : score >= 70 ? "B" : score >= 55 ? "C" : "D" };
-  }).sort((a, b) => b.score - a.score);
+  }).filter((r) => r.appointments > 0).sort((a, b) => b.score - a.score);
   return { kpis: { carriers: rows.length, appointments: rows.reduce((a, r) => a + r.appointments, 0), avgOnTimePct: rows.length ? Math.round(rows.reduce((a, r) => a + r.onTimePct, 0) / rows.length) : 0 }, rows };
 }
 export function report(kind: Kind, f: Filter): { kpis: Record<string, unknown>; rows: Record<string, unknown>[]; [k: string]: unknown } {
