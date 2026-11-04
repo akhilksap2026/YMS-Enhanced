@@ -51,4 +51,4 @@ Stop the app, run `./scripts/backup.sh` (or copy the `services/core/data` folder
 ## Sites, reports and password reset (v1.1)
 - **Add a site:** Admin → Sites → New site (code, name, time zone, doors, zones). Switch between sites from the top bar.
 - **Reports:** use the Reports item in the side bar. CSV and Excel exports are also available at `/v1/reports/<dwell|turn|doors|detention|carriers>.csv|.xlsx`.
-- **Password reset:** this needs SMTP configured under Admin → Notifications, otherwise the code only appears in the outbox. An admin can also set a password under Admin → Users.
+- **Password reset:** this needs SMTP configured under Admin → Notifications, otherwise the code only appears in the outbox. An admin can also set a new password with `PATCH /v1/admin/users/<id>` and the body `{"password": "..."}`.

@@ -60,7 +60,7 @@ function UsersTab() {
       <label>Role<select className="ctl" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as Role })}>{(Object.keys(ROLE_L) as Role[]).map((r) => <option key={r} value={r}>{ROLE_L[r]}</option>)}</select></label>
       {f.role === "carrier" && <label>Carrier<select className="ctl" value={f.carrierId} onChange={(e) => setF({ ...f, carrierId: e.target.value })}><option value="">Choose…</option>{d.carriers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
       <label>Temporary password<input className="ctl" type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
-      <button className="btn pri" disabled={!f.name || !f.email.includes("@") || f.password.length < 8 || (f.role === "carrier" && !f.carrierId)}
+      <button className="btn pri" disabled={!f.name || !f.email.includes("@") || f.password.length < 10 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password) || (f.role === "carrier" && !f.carrierId)}
         onClick={() => run(async () => { await post("/admin/users", { ...f, carrierId: f.carrierId || undefined }); setF({ ...f, name: "", email: "", password: "" }); await load(); }, "User added")}>Add user</button>
       <p className="hint">At least 8 characters. Ask the user to change it at first sign-in.</p></div></section>
   </div>;
