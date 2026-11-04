@@ -16,6 +16,7 @@ const RULES: [string, RegExp, Perm][] = [
   ["GET", /^\/yard\/carriers/, "carrier:read"],
   ["GET", /^\/appointments/, "carrier:read"],
   ["POST", /^\/appointments/, "appt:write"],
+  ["*", /^\/notifications\/(config|test|deliveries)/, "admin"],
   ["GET", /^\/notifications/, "notes:read"], ["POST", /^\/notifications/, "notes:read"],
   ["POST", /^\/integrations\/erp\//, "detention:decide"],
   ["GET", /^\/detention/, "detention:read"], ["POST", /^\/detention/, "detention:decide"],

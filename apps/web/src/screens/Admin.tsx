@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Building2, Grid3x3, Users, Scale, Palette, Plus, Trash2 } from "lucide-react";
+import { Building2, Grid3x3, Users, Scale, Palette, Plus, Trash2, Bell } from "lucide-react";
+import NotifyAdmin from "./NotifyAdmin";
 import { useApp } from "../store";
 import { del, get, patch, post, put, type Role, type SiteConfig } from "../api";
 
 type U = { id: string; email: string; name: string; role: Role; active: boolean; carrier_id?: string; carrierId?: string };
 const ROLE_L: Record<Role, string> = { tenant_admin: "Tenant admin", yard_manager: "Yard manager", gate_guard: "Gate guard", dock_supervisor: "Dock supervisor", spotter: "Spotter", carrier: "Carrier", detention_approver: "Detention approver" };
-const TABS = [["site", "Sites", Building2], ["yard", "Yard layout", Grid3x3], ["users", "Users", Users], ["rules", "Rules & integrations", Scale], ["brand", "Branding", Palette]] as const;
+const TABS = [["site", "Sites", Building2], ["yard", "Yard layout", Grid3x3], ["users", "Users", Users], ["rules", "Rules & integrations", Scale], ["notify", "Notifications", Bell], ["brand", "Branding", Palette]] as const;
 
 export default function Admin() {
   const { tenant } = useApp(); const [tab, setTab] = useState<(typeof TABS)[number][0]>(() => (new URLSearchParams(location.search).get("tab") as never) || "yard");
@@ -13,7 +14,7 @@ export default function Admin() {
   return <div className="adm">
     <div className="ph"><h1>Tenant admin</h1><span className="meta">{tenant.tenant.name} · changes apply immediately and are audited</span></div>
     <div className="seg adm-tabs">{TABS.map(([id, l, I]) => <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}><I size={14} />{l}</button>)}</div>
-    {tab === "site" && <Site />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "brand" && <Brand />}
+    {tab === "site" && <Site />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "notify" && <NotifyAdmin />}{tab === "brand" && <Brand />}
   </div>;
 }
 function useCfg() { const { tenant, run, reload } = useApp(); const save = (p: Partial<SiteConfig>, msg: string) => run(async () => { await patch("/tenant/config", p); await reload(); }, msg); return { c: tenant!.siteConfig, save }; }
