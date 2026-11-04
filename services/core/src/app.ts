@@ -14,6 +14,11 @@ import * as demo from "./modules/demo/index.ts";
 import * as reports from "./modules/reports/index.ts";
 import * as integrations from "./modules/integrations/index.ts";
 import "./modules/integrations/wire.ts";
+import * as driver from "./modules/driver/index.ts";
+import * as evidence from "./modules/evidence/index.ts";
+import * as planning from "./modules/planning/index.ts";
+import * as yardops from "./modules/yardops/index.ts";
+import "./modules/detention/accrual.ts";
 import { log } from "./shared/bus.ts";
 import { tid } from "./shared/tenancy.ts";
 export const app = express().use(cors()).use(express.json({ limit: "1mb" })).get("/health", (_q, r) => r.json({ ok: true })).use("/v1/integrations/inbound", integrations.inboundRouter).use("/v1", auth.authn)
@@ -21,4 +26,5 @@ export const app = express().use(cors()).use(express.json({ limit: "1mb" })).get
   .use("/v1/tenant", tenant.router).use("/v1/appointments", appts.router).use("/v1/gate", gate.router)
   .use("/v1/yard", yard.router).use("/v1/dock", dock.router).use("/v1/tasks", tasks.router)
   .use("/v1/detention", detention.router).use("/v1/integrations", integrations.router).use("/v1/notifications", notifications.router)
+  .use("/v1/driver", driver.router).use("/v1/evidence", evidence.router).use("/v1/planning", planning.router).use("/v1/ops", yardops.router)
   .get("/v1/events", (_q, r) => r.json(log.filter((e) => e.tenantId === tid()).slice(-100)));

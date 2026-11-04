@@ -1,3 +1,5 @@
+import { DrawerButton, Planning, DriverLink } from "../features/V12";
+import { FileSpreadsheet, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useApp } from "../store";
 import { fmtTime, get, post } from "../api";
@@ -20,7 +22,7 @@ export default function Carrier() {
     if (ok) { setMoving(null); await reload(); await loadSlots(); } };
 
   return (<>
-    <div className="ph"><h1>Appointments</h1><span className="meta">{carrier(ME)} · slots of {slotMin} min · capacity and carrier rules applied</span></div>
+    <div className="ph"><h1>Appointments</h1><span className="meta">{carrier(ME)} · slots of {slotMin} min · capacity and carrier rules applied</span><div className="act"><DrawerButton icon={<FileSpreadsheet size={14} />} label="Plan & amendments">{() => <Planning />}</DrawerButton>{u.role !== "carrier" && <DrawerButton icon={<Send size={14} />} label="Driver link">{() => <DriverLink />}</DrawerButton>}</div></div>
     <div className="grid" style={{ gridTemplateColumns: "minmax(0, 460px) minmax(0, 1fr)" }}>
       <section className="panel"><header>{moving ? "Pick a new slot" : "Book a slot"} <span className="meta">{moving ? <button className="btn sm ghost" onClick={() => setMoving(null)}>Cancel move</button> : "one click per slot"}</span></header>
         <div className="body grid" style={{ gap: 12 }}>

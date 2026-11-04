@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ScanLine, Warehouse, Route, ClipboardList, Timer, Settings, ChevronsRight, CloudOff } from "lucide-react";
+import { Send, ScanLine, Warehouse, Route, ClipboardList, Timer, Settings, ChevronsRight, CloudOff } from "lucide-react";
 import { useApp } from "../store";
 import { fmtDur, fmtTime, get, hoursSince, money, post } from "../api";
 import ControlTower from "./ControlTower";
+import { ReeferMonitor, DrawerButton, DriverLink } from "../features/V12";
 
 /** Role-specific home dashboards. Menus and other screens are unchanged; this is each role's landing screen. */
 type T = { k: string; v: string | number; s?: string; bad?: boolean; go?: string };
@@ -20,7 +21,7 @@ function YardManager() {
   const ex = [...d.exceptions].sort((a, b) => "hml".indexOf(a.severity[0]) - "hml".indexOf(b.severity[0]))[0];
   const onSite = d.units.filter((u) => u.location).length;
   return <div className="home"><Hero label="Units on site" title={`${onSite} units · ${d.exceptions.filter((e) => e.severity === "high").length} urgent exceptions`} sub={ex ? `Most urgent: ${ex.text}` : "No open exceptions"}
-    action={ex?.unitId ? <button className="btn pri" onClick={() => openUnit(ex.unitId!)}>Open unit</button> : <button className="btn" onClick={() => go("map")}>Yard map</button>} /><ControlTower /></div>;
+    action={ex?.unitId ? <button className="btn pri" onClick={() => openUnit(ex.unitId!)}>Open unit</button> : <button className="btn" onClick={() => go("map")}>Yard map</button>} /><ControlTower /><ReeferMonitor /></div>;
 }
 
 function GateGuard() {
@@ -29,7 +30,7 @@ function GateGuard() {
   const waiting = d.units.filter((u) => /^W/.test(u.location)); const held = d.units.filter((u) => u.status === "hold" || u.status === "quarantine");
   const [ocr, setOcr] = useState<boolean | null>(null); useEffect(() => { get<{ ok: boolean }>("/gate/ocr/health").then((r) => setOcr(r.ok)).catch(() => setOcr(false)); }, []);
   const last = [...d.units].filter((u) => u.gateInAt).sort((a, b) => (b.gateInAt ?? "").localeCompare(a.gateInAt ?? "")).slice(0, 10);
-  return <div className="home"><Hero label="Next 60 minutes" title={`${next.length} arrivals due`} sub={next[0] ? `First: ${next[0].ref} · ${carrier(next[0].carrierId)} · ${fmtTime(next[0].slotStart)}` : "Nothing due"} action={<button className="btn pri lg" onClick={() => go("gate")}><ScanLine size={18} />Start check-in</button>} />
+  return <div className="home"><Hero label="Next 60 minutes" title={`${next.length} arrivals due`} sub={next[0] ? `First: ${next[0].ref} · ${carrier(next[0].carrierId)} · ${fmtTime(next[0].slotStart)}` : "Nothing due"} action={<div className="row"><DrawerButton icon={<Send size={16} />} label="Driver link">{() => <DriverLink />}</DrawerButton><button className="btn pri lg" onClick={() => go("gate")}><ScanLine size={18} />Start check-in</button></div>} />
     <Tiles items={[{ k: "Waiting lane", v: waiting.length, go: "map" }, { k: "On hold at gate", v: held.length, bad: held.length > 0, go: "map" }, { k: "OCR", v: ocr == null ? "…" : ocr ? "Online" : "Offline", bad: ocr === false }, { k: "Late now", v: d.appointments.filter((a) => a.status === "late").length }]} />
     <div className="home-2"><section className="panel"><header>Arrivals due <span className="meta">plate, slot</span></header><div className="scroll"><table className="t"><tbody>{next.map((a) => <tr key={a.id} className="click" onClick={() => go("gate")}><td className="m">{a.ref}</td><td>{carrier(a.carrierId)}</td><td className="m">{a.plate ?? "–"}</td><td className="m r">{fmtTime(a.slotStart)}</td><td><span className={"tag " + (a.status === "late" ? "t-late" : "t-idle")}>{a.status}</span></td></tr>)}</tbody></table></div></section>
     <section className="panel"><header>Last crossings</header><div className="scroll"><table className="t"><tbody>{last.map((u) => <tr key={u.id}><td className="m">{u.number}</td><td>{carrier(u.carrierId)}</td><td className="m">{u.location}</td><td className="m r">{fmtTime(u.gateInAt)}</td><td className="actions">{u.status === "ok" && <button className="btn sm" onClick={() => run(() => post("/gate/checkout", { unitId: u.id }), `${u.number} gated out`)}>Gate out</button>}</td></tr>)}</tbody></table></div></section></div></div>;

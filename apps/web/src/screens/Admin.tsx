@@ -1,3 +1,4 @@
+import { PlanningAdmin } from "../features/V12";
 import { useEffect, useState } from "react";
 import { Building2, Grid3x3, Users, Scale, Palette, Plus, Trash2, Bell, CalendarClock, ScrollText } from "lucide-react";
 import NotifyAdmin from "./NotifyAdmin";
@@ -15,7 +16,7 @@ export default function Admin() {
   return <div className="adm">
     <div className="ph"><h1>Tenant admin</h1><span className="meta">{tenant.tenant.name} · changes apply immediately and are audited</span></div>
     <div className="seg adm-tabs">{TABS.map(([id, l, I]) => <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}><I size={14} />{l}</button>)}</div>
-    {tab === "site" && <SitesTab />}{tab === "appt" && <ApptRulesTab />}{tab === "audit" && <AuditTab />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "notify" && <NotifyAdmin />}{tab === "brand" && <Brand />}
+    {tab === "site" && <SitesTab />}{tab === "appt" && <><ApptRulesTab /><section className="panel" style={{ marginTop: 8 }}><header>Planning, gate kiosk and inspections</header><div className="body"><PlanningAdmin /></div></section></>}{tab === "audit" && <AuditTab />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "notify" && <NotifyAdmin />}{tab === "brand" && <Brand />}
   </div>;
 }
 function useCfg() { const { tenant, run, reload } = useApp(); const save = (p: Partial<SiteConfig>, msg: string) => run(async () => { await patch("/tenant/config", p); await reload(); }, msg); return { c: tenant!.siteConfig, save }; }

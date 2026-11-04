@@ -26,8 +26,11 @@ const who = () => currentUser()?.name ?? "system";
 const BookIn = z.object({ carrierId: z.string().min(1).max(40), slotStart: z.string().datetime({ offset: true }), direction: z.enum(["inbound", "outbound"]), door: z.string().max(10).optional(),
   unitNumber: z.string().trim().toUpperCase().max(15).optional(), plate: z.string().trim().toUpperCase().max(15).optional(), override: z.boolean().optional() });
 /** Book through the rules engine. Admin/yard manager may override with a reason (recorded). */
-export function book(input: unknown, opts: { canOverride?: boolean } = {}) {
+/** Extra checks registered by other modules (planning cut-off). They throw to refuse a change. */
+export const bookingGuards: ((slotStart: string, existing?: Appt) => void)[] = [];
+export function book(input: unknown, opts: { canOverride?: boolean; skipGuards?: boolean } = {}) {
   const b = BookIn.safeParse(input); if (!b.success) throw err(b.error.issues[0].path.join(".") + ": " + b.error.issues[0].message);
+  if (!opts.skipGuards) for (const g of bookingGuards) g(b.data.slotStart);
   const r = rules(); const v = evaluate(r, ctx(), b.data);
   if (v.length && !(b.data.override && opts.canOverride)) throw err(v[0].message, 409, { violations: v });
   const start = Date.parse(b.data.slotStart); const n = appointments.all().length;
@@ -37,9 +40,10 @@ export function book(input: unknown, opts: { canOverride?: boolean } = {}) {
   void sources[a.source].publish(a);
   return appointments.put(a);
 }
-export function reschedule(id: string, body: unknown, opts: { canOverride?: boolean } = {}) {
+export function reschedule(id: string, body: unknown, opts: { canOverride?: boolean; skipGuards?: boolean } = {}) {
   const a = appointments.get(id); if (!a) throw err("Not found", 404);
   const b = z.object({ slotStart: z.string().datetime({ offset: true }), door: z.string().max(10).optional(), override: z.boolean().optional() }).parse(body ?? {});
+  if (!opts.skipGuards) for (const g of bookingGuards) { g(a.slotStart, a); g(b.slotStart, a); }
   const r = rules(); const v = evaluateReschedule(r, ctx(), a, b.slotStart, b.door);
   if (v.length && !(b.override && opts.canOverride)) throw err(v[0].message, 409, { violations: v });
   const from = a.slotStart; const s = Date.parse(b.slotStart);
@@ -65,4 +69,4 @@ export const router = Router()
   .post("/:id/reschedule", wrap((q) => { const a = appointments.get(String(q.params.id)); const u = currentUser(); if (a && u?.role === "carrier" && a.carrierId !== u.carrierId) throw err("Not found", 404);
     return reschedule(String(q.params.id), u?.role === "carrier" ? { ...q.body, override: false } : q.body, { canOverride: mgr() }); }))
   .post("/:id/cancel", wrap((q) => { const a = appointments.get(String(q.params.id)); const u = currentUser(); if (!a || (u?.role === "carrier" && a.carrierId !== u.carrierId)) throw err("Not found", 404);
-    if (a.status === "arrived") throw err("Already arrived", 409); a.status = "cancelled"; (a.history ??= []).push({ at: new Date().toISOString(), by: who(), action: "cancelled" }); return appointments.put(a); }));
+    if (a.status === "arrived") throw err("Already arrived", 409); for (const g of bookingGuards) g(a.slotStart, a); a.status = "cancelled"; (a.history ??= []).push({ at: new Date().toISOString(), by: who(), action: "cancelled" }); return appointments.put(a); }));

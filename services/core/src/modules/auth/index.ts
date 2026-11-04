@@ -19,6 +19,7 @@ function secret() {
   return readFileSync(f, "utf8");
 }
 const SECRET = secret(); const TTL = "12h";
+export const signingSecret = () => SECRET;
 export const ROLE_LABEL: Record<Role, string> = { yard_manager: "Yard manager", gate_guard: "Gate guard", dock_supervisor: "Dock supervisor", spotter: "Spotter", carrier: "Carrier", tenant_admin: "Tenant admin", detention_approver: "Detention approver" };
 export const sign = (p: Principal) => jwt.sign(p, SECRET, { expiresIn: TTL });
 const view = (p: Principal) => ({ ...p, roleLabel: ROLE_LABEL[p.role], perms: ROLE_PERMS[p.role] });
@@ -32,7 +33,7 @@ export async function login(email: string, password: string) {
   return { token: sign(p), user: view(p) };
 }
 export const demoPrincipal = (role: Role = "tenant_admin"): Principal => ({ userId: "demo-" + role, tenantId: DEMO_TENANT, role, name: "Demo " + ROLE_LABEL[role], carrierId: role === "carrier" ? "c2" : undefined, demo: true });
-const OPEN = [/^\/auth\/(login|demo|reset-request|reset)$/, /^\/health$/];
+const OPEN = [/^\/driver\/p\//, /^\/driver\/kiosk\//, /^\/auth\/(login|demo|reset-request|reset)$/, /^\/health$/];
 /** Authenticate every /v1 request, bind tenant + user to the async context, enforce permission, flush writes on finish. */
 export function authn(q: Request, r: Response, next: NextFunction) {
   const path = q.path; if (OPEN.some((re) => re.test(path))) return next();

@@ -9,8 +9,10 @@ import { units, vacate } from "../yard/index.ts";
 import { doors, release } from "../dock/index.ts";
 import { yardVisits } from "../reports/history.ts";
 import { tasks } from "../tasks/index.ts";
+import { sealCheck } from "../evidence/index.ts";
+import { raise } from "../yard/index.ts";
 export type GateDecision = "pass" | "hold" | "quarantine";
-const CheckIn = z.object({ appointmentId: z.string().min(1).max(60), plate: z.string().trim().max(15).default(""), unitNumber: z.string().trim().min(3).max(15), decision: z.enum(["pass", "hold", "quarantine"]), seal: z.string().max(30).optional(), note: z.string().max(500).optional() });
+const CheckIn = z.object({ appointmentId: z.string().min(1).max(60), plate: z.string().trim().max(15).default(""), unitNumber: z.string().trim().min(3).max(15), decision: z.enum(["pass", "hold", "quarantine"]), seal: z.string().max(30).optional(), sealOverride: z.string().max(200).optional(), note: z.string().max(500).optional() });
 export function checkIn(input: unknown) {
   const p = CheckIn.safeParse(input); if (!p.success) throw Object.assign(new Error(p.error.issues[0].path.join(".") + ": " + p.error.issues[0].message), { status: 422 }); const body = p.data;
   const a = appointments.get(body.appointmentId);
@@ -19,12 +21,15 @@ export function checkIn(input: unknown) {
   const v = isContainer ? validateContainer(body.unitNumber) : { valid: true, normalized: body.unitNumber.toUpperCase() };
   if (!v.valid && body.decision === "pass") throw Object.assign(new Error("Unit number invalid: " + v.reason), { status: 422 });
   if (a.status === "arrived" || a.status === "cancelled") throw Object.assign(new Error(`Appointment already ${a.status}`), { status: 409 });
+  const seal = sealCheck((a as any).seal, body.seal);
+  if (seal.status === "mismatch" && body.decision === "pass" && !body.sealOverride?.trim()) throw Object.assign(new Error(`Seal ${seal.observed} does not match ${seal.expected} on ${a.ref}. Hold the unit or give an override reason.`), { status: 409, seal });
   const lateMin = Math.round((Date.now() - Date.parse(a.slotStart)) / 60e3); a.status = "arrived"; (a as any).arrivedAt = new Date().toISOString(); (a as any).lateMin = lateMin;
   const id = "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  units.put({ id, number: v.normalized, kind: isContainer ? "container" : "trailer", carrierId: a.carrierId, status: body.decision === "pass" ? "ok" : body.decision, location: body.decision === "quarantine" ? "H-zone" : "W-zone", gateInAt: new Date().toISOString(), apptRef: a.ref, apptSlot: a.slotStart, lateMin, direction: a.direction, load: a.direction === "inbound" ? "loaded" : "empty" });
+  units.put({ id, number: v.normalized, kind: isContainer ? "container" : "trailer", carrierId: a.carrierId, status: body.decision === "pass" ? "ok" : body.decision, location: body.decision === "quarantine" ? "H-zone" : "W-zone", gateInAt: new Date().toISOString(), apptRef: a.ref, apptSlot: a.slotStart, lateMin, direction: a.direction, load: a.direction === "inbound" ? "loaded" : "empty", ...((a as any).hazmat ? { hazmat: (a as any).hazmat } : {}), ...(body.decision !== "pass" ? { holdLog: [{ from: new Date().toISOString() }] } : {}), seal } as any);
+  if (seal.status === "mismatch") raise({ severity: "high", text: `Seal mismatch on ${v.normalized}: ${seal.observed} ≠ ${seal.expected}${body.sealOverride ? " (override: " + body.sealOverride + ")" : ""}`, unitId: id });
   if (body.decision === "pass") tasks.put({ id: "t" + (tasks.all().length + 1), version: 1, type: "spot", unitId: id, from: "Gate 1", to: "W01", priority: 2, status: "open", createdAt: new Date().toISOString() });
   publish({ type: "GateIn", aggregateId: id, aggregateVersion: 1, payload: { unitId: id, decision: body.decision } } as any);
-  return { appointment: a, unitId: id };
+  return { appointment: a, unitId: id, seal };
 }
 /** Gate-out: frees slot/door, closes open tasks, records the completed visit (turn time) and publishes GateOut. */
 export function checkOut(unitId: string) {
@@ -44,5 +49,5 @@ export const router = Router()
     const k = String(q.body?.kind ?? "auto"); r.json(await ocr().read(q.file.buffer, q.file.mimetype, (["auto", "container", "plate"].includes(k) ? k : "auto") as any)); }
     catch (e: any) { r.status(e.status ?? 500).json({ error: e.message }); } })
   .get("/validate/:n", (q, r) => r.json(validateContainer(q.params.n)))
-  .post("/checkin", (q, r) => { try { r.json(checkIn(q.body)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } })
+  .post("/checkin", (q, r) => { try { r.json(checkIn(q.body)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message, seal: e.seal }); } })
   .post("/checkout", (q, r) => { try { r.json(checkOut(String(q.body?.unitId ?? ""))); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });

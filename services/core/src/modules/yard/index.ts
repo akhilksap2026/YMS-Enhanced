@@ -16,8 +16,8 @@ const wrap = (r: any, f: () => unknown) => { try { r.json(f()); } catch (e: any)
 export function setHold(id: string, on: boolean, reason?: string) {
   const u = units.get(id); if (!u) throw Object.assign(new Error("Not found"), { status: 404 });
   if (u.status === "quarantine") throw Object.assign(new Error("Unit is quarantined; inspection required"), { status: 409 });
-  if (on) { if (u.status === "hold") throw Object.assign(new Error("Already on hold"), { status: 409 }); u.status = "hold"; raise({ severity: "med", text: `${u.number} placed on hold${reason ? ": " + reason : ""}`, unitId: u.id }); }
-  else { if (u.status !== "hold") throw Object.assign(new Error("Unit is not on hold"), { status: 409 }); u.status = "ok"; }
+  if (on) { if (u.status === "hold") throw Object.assign(new Error("Already on hold"), { status: 409 }); u.status = "hold"; ((u as any).holdLog ??= []).push({ from: new Date().toISOString() }); raise({ severity: "med", text: `${u.number} placed on hold${reason ? ": " + reason : ""}`, unitId: u.id }); }
+  else { if (u.status !== "hold") throw Object.assign(new Error("Unit is not on hold"), { status: 409 }); u.status = "ok"; const l = (u as any).holdLog?.at(-1); if (l && !l.to) l.to = new Date().toISOString(); }
   return u;
 }
 /** Slot bookkeeping used by moves. */

@@ -1,3 +1,5 @@
+import { DrawerButton, Staging } from "../features/V12";
+import { Layers } from "lucide-react";
 import { useState } from "react";
 import { DoorOpen, Timer, ArrowDownToLine, ArrowUpFromLine, Ban, Route, GanttChart } from "lucide-react";
 import { useApp } from "../store";
@@ -20,7 +22,7 @@ export default function Dock() {
   const now = Date.now(), w0 = now - 5 * 3600e3, w1 = now + 4 * 3600e3, xp = (t: number) => Math.max(0, Math.min(100, ((t - w0) / (w1 - w0)) * 100));
   const ticks = Array.from({ length: 10 }, (_, i) => w0 + i * 3600e3);
   return (<div className="dock2">
-    <div className="ph" style={{ gridColumn: "1 / -1" }}><h1>Door board</h1><span className="meta">{d.doors.filter((x) => x.state === "occupied").length} occupied · {free.length} free · drag a unit onto a free door, or select a unit then click a door</span></div>
+    <div className="ph" style={{ gridColumn: "1 / -1" }}><h1>Door board</h1><span className="meta">{d.doors.filter((x) => x.state === "occupied").length} occupied · {free.length} free · drag a unit onto a free door, or select a unit then click a door</span><div className="act"><DrawerButton icon={<Layers size={14} />} label="Staging queue">{() => <Staging />}</DrawerButton></div></div>
       <section className="panel dock-doors" data-tour="dock"><header>Doors</header>
         <div className="body doors">{d.doors.map((x) => { const u = unit(x.unitId); const h = hoursSince(x.since); return (
           <div key={x.id} className={`door ${x.state} ${over === x.id ? "over" : ""}`}

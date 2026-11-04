@@ -21,6 +21,8 @@ export function transition(id: string, to: Task["status"], seenVersion: number, 
 }
 const err = (m: string, status = 409) => Object.assign(new Error(m), { status });
 /** Create a move to a slot label (A07) or door label (D03). Validates target and unit state up front. */
+/** Placement checks registered by planning (zone rules, hazmat segregation). They throw to refuse a move. */
+export const placementGuards: ((u: import("../../../../../packages/contracts/index.ts").Unit, to: string) => void)[] = [];
 export function createMove(body: { unitId: string; to: string; priority?: 1 | 2 | 3 }) {
   const u = units.get(body.unitId); if (!u) throw err("Unit not found", 404);
   if (u.status === "quarantine") throw err("Unit is quarantined");
@@ -32,6 +34,8 @@ export function createMove(body: { unitId: string; to: string; priority?: 1 | 2 
   if (door && u.status === "hold") throw err("Unit on hold cannot go to a door");
   if (slot?.unitId) throw err(to + " is occupied");
   if (tasks.all().some((t) => t.status !== "done" && (t.to === to || t.unitId === u.id))) throw err("A move is already pending for this unit or target");
+  for (const g of placementGuards) g(u, to);
+  if ((u as any).hot) body = { ...body, priority: 1 };
   const t: Task = { id: "t" + (tasks.all().length + 1) + "-" + Date.now().toString(36), version: 1, type: door ? "spot" : "move", unitId: u.id, from: u.location || "W", to, priority: body.priority ?? 2, status: "open", createdAt: new Date().toISOString() };
   return tasks.put(t);
 }

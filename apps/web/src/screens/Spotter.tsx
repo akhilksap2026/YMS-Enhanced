@@ -1,3 +1,5 @@
+import { DrawerButton, YardCheck } from "../features/V12";
+import { ScanSearch } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CloudOff, RefreshCw } from "lucide-react";
 import { enqueue, list, overlay, sync, isNetworkError, type Pending } from "../offline/queue";
@@ -24,7 +26,7 @@ export default function Spotter() {
     if (q.length || !navigator.onLine) return queue(); // keep order: never overtake queued steps
     try { await post(`/tasks/${t.id}/${n[0]}`, body); toast(label); await reload(); return true; } catch (e) { if (isNetworkError(e)) return queue(); toast((e as Error).message, true); await reload(); return false; } };
   return (<div className="spot2">
-    <div className="sp-top"><div><b>My moves</b><small className="mu">Spotter 1 · YT-03</small></div>{net && !q.length ? <span className="live"><i />online</span> : <button className="sp-off" onClick={() => void doSync()} disabled={busy}>{busy ? <RefreshCw size={12} className="spin" /> : <CloudOff size={12} />}{net ? "syncing" : "offline"}{q.length ? ` · ${q.length} queued` : ""}</button>}</div>
+    <div className="sp-top"><div><b>My moves</b><small className="mu">Spotter 1 · YT-03</small></div><DrawerButton cls="btn sm" icon={<ScanSearch size={13} />} label="Yard check">{() => <YardCheck />}</DrawerButton>{net && !q.length ? <span className="live"><i />online</span> : <button className="sp-off" onClick={() => void doSync()} disabled={busy}>{busy ? <RefreshCw size={12} className="spin" /> : <CloudOff size={12} />}{net ? "syncing" : "offline"}{q.length ? ` · ${q.length} queued` : ""}</button>}</div>
     {t && u ? <div className="sp-job enter" key={t.id}>
       <div className="row" style={{ justifyContent: "space-between" }}><span className={"tag " + (t.priority === 1 ? "t-late" : "t-idle")}>P{t.priority} · {t.type}</span><span className="mu m" style={{ fontSize: 12 }}>{t.status.replace("_", " ")} · {fmtTime(t.createdAt)}</span></div>
       <div className="sp-route m"><span>{t.from}</span><ChevronsRight size={26} /><span style={{ color: "var(--accent)" }}>{t.to}</span></div>

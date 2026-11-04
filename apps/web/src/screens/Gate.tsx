@@ -28,7 +28,7 @@ export default function Gate() {
   const plateMatch = sel && plate.trim().toUpperCase() === (sel.plate ?? "").toUpperCase();
   const norm = (x: string) => x.trim().toUpperCase().replace(/[\s-]/g, "");
   const unitMatch = sel && norm(unitNo) === norm(sel.unitNumber ?? "");
-  const decide = (decision: "pass" | "hold" | "quarantine") => sel && run(() => post("/gate/checkin", { appointmentId: sel.id, plate, unitNumber: unitNo, decision, seal }), `${sel.ref}: ${decision.toUpperCase()} recorded, driver notified`);
+  const decide = (decision: "pass" | "hold" | "quarantine") => sel && run(async () => { try { return await post("/gate/checkin", { appointmentId: sel.id, plate, unitNumber: unitNo, decision, seal }); } catch (e) { const m = (e as Error).message; if (/^Seal /.test(m)) { const why = prompt(m + "\n\nOverride reason (leave empty to stop):"); if (why?.trim()) return post("/gate/checkin", { appointmentId: sel.id, plate, unitNumber: unitNo, decision, seal, sealOverride: why }); } throw e; } }, `${sel.ref}: ${decision.toUpperCase()} recorded, driver notified`);
   useEffect(() => { const k = (e: KeyboardEvent) => { if (!e.altKey) return; if (e.key === "p") { e.preventDefault(); if (v?.valid) decide("pass"); } if (e.key === "h") { e.preventDefault(); decide("hold"); } if (e.key === "q") { e.preventDefault(); decide("quarantine"); } };
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); });
 

@@ -12,6 +12,12 @@ export const ROLE_PERMS: Record<Role, Perm[]> = {
 };
 // First match wins. Paths are relative to /v1.
 const RULES: [string, RegExp, Perm][] = [
+  ["POST", /^\/driver\/kiosk-token/, "admin"], ["*", /^\/driver\//, "gate:write"],
+  ["PUT", /^\/evidence\/templates/, "admin"], ["POST", /^\/evidence\//, "gate:write"],
+  ["PUT", /^\/planning\/(settings|rules)/, "admin"], ["POST", /^\/planning\/import/, "appt:write"],
+  ["POST", /^\/planning\/amendments\/[^/]+\//, "yard:write"], ["POST", /^\/planning\/amendments/, "appt:write"], ["GET", /^\/planning\/(amendments|settings|template)/, "carrier:read"],
+  ["POST", /^\/planning\//, "yard:write"],
+  ["POST", /^\/ops\/checks/, "tasks:transition"], ["POST", /^\/ops\/reefers/, "yard:write"], ["POST", /^\/ops\/doors/, "dock:write"],
   ["GET", /^\/tenant\/?$/, "session"], // branding + site config: any signed-in user
   ["GET", /^\/yard\/carriers/, "carrier:read"],
   ["GET", /^\/appointments/, "carrier:read"],

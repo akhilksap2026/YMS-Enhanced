@@ -1,3 +1,5 @@
+import { UnitExtras, Evidence, DrawerButton } from "./features/V12";
+import { Camera } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { X, Snowflake, Flame, Lock, LockOpen, DoorOpen, Move, Container, Truck, TriangleAlert, Radar } from "lucide-react";
 import { fmtDur, hoursSince, post, type Unit } from "./api";
@@ -72,6 +74,8 @@ export function UnitDetail({ u, onMove, onAssign, compact }: { u: Unit; onMove?:
       <button className="btn hold" disabled={blocked} onClick={() => run(() => post(`/yard/units/${u.id}/hold`, { reason: "set from yard" }), `${u.number} on hold`)}><Lock size={15} />Hold<kbd>H</kbd></button>
       <button className="btn ok" disabled={u.status !== "hold"} onClick={() => run(() => post(`/yard/units/${u.id}/release`), `${u.number} released`)}><LockOpen size={15} />Release<kbd>R</kbd></button>
     </div>
+    {!compact && <div className="v12-ux"><UnitExtras u={u} />
+    <DrawerButton cls="btn sm" icon={<Camera size={13} />} label="Gate evidence" title={`Gate evidence · ${u.number}`}>{() => <Evidence u={u} />}</DrawerButton></div>}
     {u.status === "quarantine" ? <div className="hint-line"><TriangleAlert size={14} color="var(--c-bad)" /><span>Quarantined at gate. Lifting it needs the inspection workflow, not a yard action.</span></div>
       : suggest && !blocked && !pending ? <div className="hint-line"><Radar size={14} color="var(--c-live)" /><span>Suggested <b className="m">{suggest.label}</b>: first free door. {free.length} doors free now.</span></div> : null}
   </div>);
