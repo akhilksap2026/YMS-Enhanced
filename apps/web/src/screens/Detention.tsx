@@ -1,10 +1,10 @@
 import { Fragment, useState } from "react";
 import { useApp } from "../store";
-import { money, post, type Charge } from "../api";
+import { download, money, post, type Charge } from "../api";
 
 const REASONS = ["Site-caused delay", "Carrier dispute accepted", "Free-time extension agreed", "Data error", "Other"];
 export default function Detention() {
-  const { d, run, carrier, unit } = useApp();
+  const { d, run, carrier, unit, can, reload } = useApp();
   const [filter, setFilter] = useState<"pending" | "all">("pending");
   const [edit, setEdit] = useState<{ id: string; mode: "adjusted" | "rejected"; amount: string; reason: string; note: string } | null>(null);
   const rows = d.charges.filter((c) => filter === "all" || ["indicative", "under_review", "adjusted"].includes(c.state));
@@ -15,7 +15,8 @@ export default function Detention() {
   return (<>
     <div className="ph"><h1>Detention review</h1><span className="meta">{pend.length} indicative · {money(pend.reduce((s, c) => s + c.amount, 0))} pending decision · nothing exports to ERP until approved</span>
       <div className="act"><select className="ctl" value={filter} onChange={(e) => setFilter(e.target.value as "pending" | "all")} aria-label="Filter"><option value="pending">Needs decision</option><option value="all">All charges</option></select>
-        <button className="btn" disabled={!d.charges.some((c) => c.state === "approved")} onClick={async () => { for (const c of d.charges.filter((x) => x.state === "approved")) await post(`/detention/charges/${c.id}/exported`, { by: "finance.demo" }); await run(async () => {}, "Approved charges exported to ERP (stub)"); }}>Export approved</button></div></div>
+        <button className="btn" disabled={!d.charges.some((c) => c.state === "approved") || !can("detention:decide")} onClick={() => run(async () => { await download("/integrations/erp/export", "detention-export.csv", { mode: "csv" }); await reload(); }, "Approved charges exported to CSV")}>Export CSV</button>
+        <button className="btn" disabled={!d.charges.some((c) => c.state === "approved") || !can("detention:decide")} title="Queue approved charges to the ERP endpoint (Integrations)" onClick={() => run(async () => { const x = await post<{ queued: number; batch: string }>("/integrations/erp/export", { mode: "push" }); await reload(); return x; }, "Approved charges queued to ERP")}>Push to ERP</button></div></div>
     <section className="panel">
       <table className="t"><thead><tr><th>Visit</th><th>Carrier</th><th>Unit</th><th>Type</th><th className="num">Free h</th><th className="num">Billable h</th><th className="num">Rate</th><th className="num">Amount</th><th>State</th><th>Last action</th><th /></tr></thead>
         <tbody>{rows.map((c) => { const last = c.history[c.history.length - 1]; const open = ["indicative", "under_review", "adjusted"].includes(c.state); const e = edit?.id === c.id ? edit : null; return (<Fragment key={c.id}>

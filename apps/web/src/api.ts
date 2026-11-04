@@ -27,3 +27,9 @@ export const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString(
 export const hoursSince = (iso?: string) => iso ? (Date.now() - Date.parse(iso)) / 3600e3 : 0;
 export const fmtDur = (h: number) => h < 1 ? `${Math.round(h * 60)}m` : h < 48 ? `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m` : `${Math.floor(h / 24)}d ${Math.floor(h % 24)}h`;
 export const money = (n: number, c = "USD") => n.toLocaleString("en-US", { style: "currency", currency: c, maximumFractionDigits: 0 });
+/** Authenticated file download (CSV/XLSX). */
+export async function download(path: string, filename: string, body?: unknown) {
+  const r = await fetch("/v1" + path, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json", ...(getToken() ? { authorization: "Bearer " + getToken() } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) { let m = r.statusText; try { m = (await r.json()).error ?? m; } catch { /* not json */ } throw new ApiError(m, r.status); }
+  const url = URL.createObjectURL(await r.blob()); const a = document.createElement("a"); a.href = url; a.download = (r.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1]) ?? filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+}

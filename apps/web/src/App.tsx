@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { get, post, setToken, getToken, type SessionUser, type Role, type TenantInfo, type Note } from "./api";
 import { AppCtx, type Data } from "./store";
-import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut , Plug } from "lucide-react";
 import Login from "./screens/Login";
 import Admin from "./screens/Admin";
 import AiPreview from "./screens/AiPreview";
+import Integrations from "./screens/Integrations";
 import { Notifications } from "./screens/Notifications";
 import { DemoBadge, Tour, DemoRoleSwitch } from "./demo/Demo";
 import { Drawer, UnitDetail, useTheme } from "./ui";
@@ -26,12 +27,13 @@ const SCREENS = [
   { id: "carrier", label: "Appointments", role: "Carrier", key: "6", C: Carrier, I: ClipboardList, group: "Partners & money" },
   { id: "detention", label: "Detention review", role: "Finance", key: "7", C: Detention, I: Timer, group: "Partners & money" },
   { id: "ai", label: "AI insights (preview)", role: "Tenant admin", key: "8", C: AiPreview, I: Sparkles, group: "Configure" },
+  { id: "integrations", label: "Integrations", role: "Tenant admin", key: "0", C: Integrations, I: Plug, group: "Configure" },
   { id: "admin", label: "Tenant admin", role: "Tenant admin", key: "9", C: Admin, I: Settings, group: "Configure" },
 ] as const;
 export type ScreenId = (typeof SCREENS)[number]["id"];
 /** Navigation filter per role. The server enforces the same rules independently (shared/authz.ts). */
 export const ROLE_ACCESS: Record<Role, ScreenId[]> = {
-  tenant_admin: ["tower", "map", "gate", "dock", "spotter", "carrier", "detention", "ai", "admin"],
+  tenant_admin: ["tower", "map", "gate", "dock", "spotter", "carrier", "detention", "ai", "integrations", "admin"],
   yard_manager: ["tower", "map", "gate", "dock", "spotter", "carrier", "ai"], gate_guard: ["gate", "tower", "map"], dock_supervisor: ["dock", "map", "tower"],
   spotter: ["spotter"], carrier: ["carrier"], detention_approver: ["detention", "tower"],
 };

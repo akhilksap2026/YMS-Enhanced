@@ -8,7 +8,9 @@ export interface AppointmentSourceAdapter {
   pull(since: string): Promise<Appointment[]>;
 }
 export const nativeSource: AppointmentSourceAdapter = { kind: "native", publish: async () => ({ ok: true }), pull: async () => [] };
-// Stubs: real implementations call SAP TM/EWM (OData/IDoc) and Oracle OTM (REST/XML) via the integration hub.
-export const sapSource: AppointmentSourceAdapter = { kind: "sap", publish: async (a) => ({ ok: true, externalRef: "SAP-STUB-" + a.ref }), pull: async () => [] };
-export const otmSource: AppointmentSourceAdapter = { kind: "otm", publish: async (a) => ({ ok: true, externalRef: "OTM-STUB-" + a.ref }), pull: async () => [] };
+import { publishAppointment } from "../integrations/index.ts";
+// SAP TM/EWM and Oracle OTM: bookings and changes are queued to the integration hub (retry, DLQ). Inbound changes arrive
+// through /v1/integrations/inbound/:tenant/:system and are applied by integrations/wire.ts.
+const viaHub = (kind: "sap" | "otm"): AppointmentSourceAdapter => ({ kind, publish: async (a) => { const m = publishAppointment(a); return { ok: true, externalRef: m?.id }; }, pull: async () => [] });
+export const sapSource = viaHub("sap"); export const otmSource = viaHub("otm");
 export const sources: Record<AppointmentSource, AppointmentSourceAdapter> = { native: nativeSource, sap: sapSource, otm: otmSource };
