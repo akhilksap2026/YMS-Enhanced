@@ -1,4 +1,4 @@
-# YMS Enhanced v1.0 — local installation
+# YMS Enhanced v1.1 — local installation
 
 Runs entirely on your own computer. No cloud hosting, nothing leaves the machine
 (outbound e-mail/SMS and ERP integrations are off/captured locally until you configure them).
@@ -47,3 +47,8 @@ Stop the app, run `./scripts/backup.sh` (or copy the `services/core/data` folder
 - **OCR shows "unavailable"** — check `ocr.log`; delete `services/ocr/.venv` and start again to reinstall. On Linux you may need `libgl1` (`sudo apt install libgl1`).
 - **PowerShell blocks the script** — use `start.bat`, which bypasses the execution policy for this script only.
 - **Start fresh** — stop the app and delete `services/core/data`.
+
+## Sites, reports and password reset (v1.1)
+- **Add a site:** Admin → Sites → New site (code, name, time zone, doors, zones). Switch between sites from the top bar.
+- **Reports:** use the Reports item in the side bar. CSV and Excel exports are also available at `/v1/reports/<dwell|turn|doors|detention|carriers>.csv|.xlsx`.
+- **Password reset:** this needs SMTP configured under Admin → Notifications, otherwise the code only appears in the outbox. An admin can also set a password under Admin → Users.
