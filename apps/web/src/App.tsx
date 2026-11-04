@@ -150,7 +150,7 @@ function App({ user, setUser }: { user: SessionUser; setUser: (u: SessionUser | 
       </Drawer>}
       {palette && <Palette onClose={() => setPalette(false)} go={(s) => { go(s); setPalette(false); }} allowed={allowed} />}
       {notesOpen && <Notifications notes={notes} onClose={() => setNotesOpen(false)} />}
-      {tourOpen && <Tour onClose={() => { setTourOpen(false); sessionStorage.setItem("yms.tour.seen", "1"); }} switchRole={switchRole} />}
+      {tourOpen && <Tour onClose={() => { setTourOpen(false); sessionStorage.setItem("yms.tour.seen", "1"); }} switchRole={switchRole} go={go} role={role} />}
       {toastMsg && <div className={"toast" + (toastMsg.err ? " err" : "")} role="status">{toastMsg.err ? <TriangleAlert size={15} /> : <CheckCircle2 size={15} color="var(--c-ok)" />}{toastMsg.m}</div>}
     </AppCtx.Provider>
   );
