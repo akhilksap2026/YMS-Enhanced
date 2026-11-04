@@ -351,3 +351,21 @@ td.num { text-align: right; }
 .who.btnish { cursor: pointer; border-radius: 6px; padding: 2px 4px; } .who.btnish:hover { background: var(--surface-2); }
 .viol { margin: 6px 0 0; padding-left: 16px; color: var(--bad); font-size: var(--fs-sm); }
 .linkish { all: unset; cursor: pointer; color: var(--text-3); font-size: var(--fs-sm); align-self: flex-end; } .linkish:hover { color: var(--text); text-decoration: underline; }
+
+/* Role home dashboards (v1.2) */
+.home { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.home.phone, .home.phone-ok { max-width: 520px; margin: 0 auto; width: 100%; }
+.home-hero { display: flex; align-items: center; gap: 16px; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r-3); background: var(--surface); }
+.home-hero.col { flex-direction: column; align-items: stretch; }
+.home-hero small { color: var(--text-3); font-size: var(--fs-sm); } .home-hero h2 { margin: 2px 0 0; font-size: 20px; font-weight: 600; } .home-hero p { margin: 2px 0 0; }
+.home-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.home-tile { all: unset; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-3); background: var(--surface); cursor: pointer; }
+.home-tile:disabled { cursor: default; } .home-tile:not(:disabled):hover { border-color: var(--line-strong); } .home-tile:focus-visible { outline: 2px solid var(--focus); }
+.home-tile small { color: var(--text-3); font-size: var(--fs-sm); } .home-tile b { font-size: 20px; font-weight: 600; } .home-tile.bad b { color: var(--bad); }
+.home-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } @media (max-width: 900px) { .home-2 { grid-template-columns: 1fr; } }
+.door-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.door-strip .ds { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); }
+.door-strip .ds.free { border-left: 3px solid var(--c-ok); } .door-strip .ds.occupied { border-left: 3px solid var(--info); } .door-strip .ds.blocked { border-left: 3px solid var(--idle); opacity: .7; } .door-strip .ds.over { border-left-color: var(--c-late); }
+.hbar { display: grid; grid-template-columns: 140px 1fr 80px; align-items: center; gap: 8px; height: 24px; } .hbar i { height: 8px; border-radius: 4px; background: var(--accent); } .hbar b { text-align: right; }
+.pill-off { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: var(--r-2); background: var(--warn-bg); color: var(--warn); }
+@media (max-width: 600px) { .home-hero { flex-direction: column; align-items: stretch; } .home .btn.lg { width: 100%; } }

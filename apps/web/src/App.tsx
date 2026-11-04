@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { get, post, setToken, getToken, setSite, type SessionUser, type Role, type TenantInfo, type Note } from "./api";
 import { AppCtx, type Data } from "./store";
-import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut , Plug, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut , Plug, BarChart3, House } from "lucide-react";
 import Login from "./screens/Login";
 import Admin from "./screens/Admin";
 import AiPreview from "./screens/AiPreview";
@@ -11,6 +11,7 @@ import { DemoBadge, Tour, DemoRoleSwitch } from "./demo/Demo";
 import { Drawer, UnitDetail, useTheme } from "./ui";
 import YardMap from "./screens/YardMap";
 import ControlTower from "./screens/ControlTower";
+import Home from "./screens/Home";
 import Gate from "./screens/Gate";
 import Dock from "./screens/Dock";
 import Spotter from "./screens/Spotter";
@@ -21,6 +22,7 @@ import Account from "./screens/Account";
 
 const GROUPS = ["Operate", "Partners & money", "Configure"] as const;
 const SCREENS = [
+  { id: "home", label: "Home", role: "My dashboard", key: "h", C: Home, I: House, group: "Operate" },
   { id: "tower", label: "Control tower", role: "Yard manager", key: "1", C: ControlTower, I: LayoutDashboard, group: "Operate" },
   { id: "map", label: "Yard map", role: "Yard manager", key: "2", C: YardMap, I: MapIcon, group: "Operate" },
   { id: "gate", label: "Gate console", role: "Gate guard", key: "3", C: Gate, I: ScanLine, group: "Operate" },
@@ -36,9 +38,9 @@ const SCREENS = [
 export type ScreenId = (typeof SCREENS)[number]["id"];
 /** Navigation filter per role. The server enforces the same rules independently (shared/authz.ts). */
 export const ROLE_ACCESS: Record<Role, ScreenId[]> = {
-  tenant_admin: ["tower", "map", "gate", "dock", "spotter", "carrier", "detention", "reports", "ai", "integrations", "admin"],
-  yard_manager: ["tower", "map", "gate", "dock", "spotter", "carrier", "reports", "ai"], gate_guard: ["gate", "tower", "map"], dock_supervisor: ["dock", "map", "tower", "reports"],
-  spotter: ["spotter"], carrier: ["carrier"], detention_approver: ["detention", "reports", "tower"],
+  tenant_admin: ["home", "tower", "map", "gate", "dock", "spotter", "carrier", "detention", "reports", "ai", "integrations", "admin"],
+  yard_manager: ["home", "tower", "map", "gate", "dock", "spotter", "carrier", "reports", "ai"], gate_guard: ["home", "gate", "tower", "map"], dock_supervisor: ["home", "dock", "map", "tower", "reports"],
+  spotter: ["home", "spotter"], carrier: ["home", "carrier"], detention_approver: ["home", "detention", "reports", "tower"],
 };
 const empty: Data = { units: [], zones: [], doors: [], appointments: [], tasks: [], charges: [], exceptions: [], carriers: [] };
 
@@ -52,13 +54,13 @@ export default function Root() {
 }
 
 function App({ user, setUser }: { user: SessionUser; setUser: (u: SessionUser | null) => void }) {
-  const initial = (new URLSearchParams(location.search).get("s") as ScreenId) || "tower";
+  const initial = (new URLSearchParams(location.search).get("s") as ScreenId) || "home";
   const [screen, setScreen] = useState<ScreenId>(initial);
   const role = user.role; const can = useCallback((p: string) => user.perms.includes(p), [user.perms]);
   const [tenant, setTenant] = useState<TenantInfo | undefined>(); const [notes, setNotes] = useState<Note[]>([]); const [notesOpen, setNotesOpen] = useState(false); const [acct, setAcct] = useState(false);
   const [tourOpen, setTourOpen] = useState(() => user.demo === true && new URLSearchParams(location.search).get("tour") !== "0" && !sessionStorage.getItem("yms.tour.seen"));
   const signOut = useCallback(() => { setToken(); setUser(null); }, [setUser]);
-  const switchRole = useCallback(async (r: Role) => { const x = await post<{ token: string; user: SessionUser }>("/auth/demo/role", { role: r }); setToken(x.token); setUser(x.user); }, [setUser]);
+  const switchRole = useCallback(async (r: Role) => { const x = await post<{ token: string; user: SessionUser }>("/auth/demo/role", { role: r }); setToken(x.token); const q = new URLSearchParams(location.search); q.set("s", "home"); q.delete("unit"); history.replaceState(null, "", "?" + q); setUser(x.user); }, [setUser]);
   const [d, setD] = useState<Data>(empty);
   const [loaded, setLoaded] = useState(false);
   const [toastMsg, setToast] = useState<{ m: string; err?: boolean } | null>(null);

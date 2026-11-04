@@ -6,6 +6,13 @@ const ROLES: [Role, string][] = [["tenant_admin", "Tenant admin"], ["yard_manage
 
 /** Scripted walk-through. Each step sets role + screen, then spotlights the first selector that exists. */
 export const STEPS: { title: string; role: Role; screen: string; sel: string; text: string }[] = [
+  { title: "Your home dashboard", role: "yard_manager", screen: "home", sel: ".home-hero", text: "Every role lands on its own home. The yard manager sees units on site and the most urgent exception above the control tower." },
+  { title: "Gate guard home", role: "gate_guard", screen: "home", sel: ".home-hero", text: "Arrivals due in the next hour, the waiting lane, holds and OCR health. One tap starts check-in." },
+  { title: "Dock supervisor home", role: "dock_supervisor", screen: "home", sel: ".door-strip", text: "Every door at a glance with time at door. Assign the next waiting unit or release a door right here." },
+  { title: "Spotter home (phone)", role: "spotter", screen: "home", sel: ".home-hero", text: "Built for a phone: the next move first, hot loads on top, and an offline banner when the network drops." },
+  { title: "Carrier home", role: "carrier", screen: "home", sel: ".home-hero", text: "The next appointment, open bookings, late and no-show record, and detention items for this carrier only." },
+  { title: "Detention approver home", role: "detention_approver", screen: "home", sel: ".home-hero", text: "Charges waiting for a decision and their indicative total, ageing, and exposure by carrier." },
+  { title: "Tenant admin home", role: "tenant_admin", screen: "home", sel: ".home-hero", text: "Site list, integration dead letters, failed notifications and recent audit events." },
   { title: "Control tower", role: "yard_manager", screen: "tower", sel: ".kpis2", text: "One screen for the shift: live KPIs with trend, and every number is clickable through to the units behind it." },
   { title: "Flow strip", role: "yard_manager", screen: "tower", sel: ".fstage-wrap", text: "Gate → yard → door → out. Each stage shows count and the slowest dwell, so the bottleneck is visible at a glance." },
   { title: "Exceptions and door timeline", role: "yard_manager", screen: "tower", sel: ".gantt", text: "Alerts on the left need an action; the timeline shows which doors are tied up and for how long." },
