@@ -1,0 +1,14 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: cd services/core && npm ci && npx tsc --noEmit -p . && npm test
+      - run: cd apps/web && npm ci && npx tsc -b && npx vite build
+      - run: cd services/ocr && python -m venv .venv && .venv/bin/pip install -q -r requirements.txt pytest && .venv/bin/python -m pytest -q

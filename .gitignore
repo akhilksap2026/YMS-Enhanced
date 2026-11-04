@@ -7,3 +7,4 @@ dist/
 services/core/data/
 services/ocr/.venv/
 __pycache__/
+backups/
