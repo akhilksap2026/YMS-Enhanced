@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { get, post, setToken, getToken, type SessionUser, type Role, type TenantInfo, type Note } from "./api";
+import { get, post, setToken, getToken, setSite, type SessionUser, type Role, type TenantInfo, type Note } from "./api";
 import { AppCtx, type Data } from "./store";
-import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut , Plug } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, ScanLine, Warehouse, Route, ClipboardList, Timer, Command, ChevronsLeft, ChevronsRight, Search, Sun, Moon, Monitor, TriangleAlert, CheckCircle2, Settings, Sparkles, Bell, LogOut , Plug, BarChart3 } from "lucide-react";
 import Login from "./screens/Login";
 import Admin from "./screens/Admin";
 import AiPreview from "./screens/AiPreview";
@@ -16,6 +16,8 @@ import Dock from "./screens/Dock";
 import Spotter from "./screens/Spotter";
 import Carrier from "./screens/Carrier";
 import Detention from "./screens/Detention";
+import Reports from "./screens/Reports";
+import Account from "./screens/Account";
 
 const GROUPS = ["Operate", "Partners & money", "Configure"] as const;
 const SCREENS = [
@@ -26,6 +28,7 @@ const SCREENS = [
   { id: "spotter", label: "My moves", role: "Spotter", key: "5", C: Spotter, I: Route, group: "Operate" },
   { id: "carrier", label: "Appointments", role: "Carrier", key: "6", C: Carrier, I: ClipboardList, group: "Partners & money" },
   { id: "detention", label: "Detention review", role: "Finance", key: "7", C: Detention, I: Timer, group: "Partners & money" },
+  { id: "reports", label: "Reports", role: "Yard manager", key: "r", C: Reports, I: BarChart3, group: "Partners & money" },
   { id: "ai", label: "AI insights (preview)", role: "Tenant admin", key: "8", C: AiPreview, I: Sparkles, group: "Configure" },
   { id: "integrations", label: "Integrations", role: "Tenant admin", key: "0", C: Integrations, I: Plug, group: "Configure" },
   { id: "admin", label: "Tenant admin", role: "Tenant admin", key: "9", C: Admin, I: Settings, group: "Configure" },
@@ -33,9 +36,9 @@ const SCREENS = [
 export type ScreenId = (typeof SCREENS)[number]["id"];
 /** Navigation filter per role. The server enforces the same rules independently (shared/authz.ts). */
 export const ROLE_ACCESS: Record<Role, ScreenId[]> = {
-  tenant_admin: ["tower", "map", "gate", "dock", "spotter", "carrier", "detention", "ai", "integrations", "admin"],
-  yard_manager: ["tower", "map", "gate", "dock", "spotter", "carrier", "ai"], gate_guard: ["gate", "tower", "map"], dock_supervisor: ["dock", "map", "tower"],
-  spotter: ["spotter"], carrier: ["carrier"], detention_approver: ["detention", "tower"],
+  tenant_admin: ["tower", "map", "gate", "dock", "spotter", "carrier", "detention", "reports", "ai", "integrations", "admin"],
+  yard_manager: ["tower", "map", "gate", "dock", "spotter", "carrier", "reports", "ai"], gate_guard: ["gate", "tower", "map"], dock_supervisor: ["dock", "map", "tower", "reports"],
+  spotter: ["spotter"], carrier: ["carrier"], detention_approver: ["detention", "reports", "tower"],
 };
 const empty: Data = { units: [], zones: [], doors: [], appointments: [], tasks: [], charges: [], exceptions: [], carriers: [] };
 
@@ -52,7 +55,7 @@ function App({ user, setUser }: { user: SessionUser; setUser: (u: SessionUser | 
   const initial = (new URLSearchParams(location.search).get("s") as ScreenId) || "tower";
   const [screen, setScreen] = useState<ScreenId>(initial);
   const role = user.role; const can = useCallback((p: string) => user.perms.includes(p), [user.perms]);
-  const [tenant, setTenant] = useState<TenantInfo | undefined>(); const [notes, setNotes] = useState<Note[]>([]); const [notesOpen, setNotesOpen] = useState(false);
+  const [tenant, setTenant] = useState<TenantInfo | undefined>(); const [notes, setNotes] = useState<Note[]>([]); const [notesOpen, setNotesOpen] = useState(false); const [acct, setAcct] = useState(false);
   const [tourOpen, setTourOpen] = useState(() => user.demo === true && new URLSearchParams(location.search).get("tour") !== "0" && !sessionStorage.getItem("yms.tour.seen"));
   const signOut = useCallback(() => { setToken(); setUser(null); }, [setUser]);
   const switchRole = useCallback(async (r: Role) => { const x = await post<{ token: string; user: SessionUser }>("/auth/demo/role", { role: r }); setToken(x.token); setUser(x.user); }, [setUser]);
@@ -130,7 +133,9 @@ function App({ user, setUser }: { user: SessionUser; setUser: (u: SessionUser | 
         </nav>
         <div className="main">
           <header className="topbar">
-            {user.demo && <DemoBadge onTour={() => setTourOpen(true)} />}<span className="chip" data-tour="site"><Warehouse size={15} />{tenant?.sites[0]?.name ?? "Site"}</span>
+            {user.demo && <DemoBadge onTour={() => setTourOpen(true)} />}{tenant && tenant.sites.length > 1
+              ? <label className="site-wrap" data-tour="site" title="Switch site: every screen shows only this site's data"><Warehouse size={15} /><select className="site-pick" aria-label="Site" value={tenant.site?.id ?? ""} onChange={(e) => { setSite(e.target.value); location.reload(); }}>{tenant.sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+              : <span className="chip" data-tour="site"><Warehouse size={15} />{tenant?.site?.name ?? tenant?.sites[0]?.name ?? "Site"}</span>}
             <label className="search"><Search size={15} /><input ref={searchRef} placeholder="Unit, plate, appointment" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search" /><kbd>/</kbd></label>
             {user.demo && <DemoRoleSwitch role={role} onSwitch={(r) => switchRole(r).catch((e) => toast(e.message, true))} />}
             <span className="sp" />
@@ -140,14 +145,16 @@ function App({ user, setUser }: { user: SessionUser; setUser: (u: SessionUser | 
                 <button key={k} role="radio" aria-checked={theme.pref === k} className={theme.pref === k ? "on" : ""} onClick={() => theme.setPref(k)} title={l} aria-label={l}><I size={14} /></button>)}
             </div>
             <button className="btn icon ghost bell" data-tour="notifications" onClick={() => setNotesOpen(true)} aria-label={`Notifications, ${notes.filter((n) => !n.read).length} unread`}><Bell size={16} />{notes.some((n) => !n.read) && <em>{Math.min(99, notes.filter((n) => !n.read).length)}</em>}</button>
-            <div className="who"><div className="av" title={user.name}>{user.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div><span><b>{user.name}</b><small>{user.roleLabel}</small></span></div>
+            <div className="who btnish" role="button" tabIndex={0} title="Account and password" onClick={() => setAcct(true)} onKeyDown={(e) => e.key === "Enter" && setAcct(true)}><div className="av" title={user.name}>{user.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div><span><b>{user.name}</b><small>{user.roleLabel}</small></span></div>
             <button className="btn icon ghost" onClick={signOut} aria-label="Sign out" title="Sign out"><LogOut size={16} /></button>
           </header>
           <main className={"content" + (screen === "map" ? " flush" : "") + (screen === "spotter" && user.demo && role !== "spotter" ? " phone-host" : "")}>{loaded ? <Cur key={screen} /> : <div className="empty-note">Loading site data…</div>}</main>
         </div>
       </div>
+      {acct && <Drawer title="Account" onClose={() => setAcct(false)}><Account user={user} toast={toast} /></Drawer>}
       {drawerUnit && unit(drawerUnit) && <Drawer title={<><span className="m">{unit(drawerUnit)!.number}</span><span className="mu" style={{ fontWeight: 400 }}>unit</span></>} onClose={() => setDrawerUnit(undefined)}>
         <UnitDetail u={unit(drawerUnit)!} onMove={() => { setDrawerUnit(undefined); go("map", drawerUnit); }} />
+        {can("gate:write") && <div style={{ padding: "0 12px 12px" }}><button className="btn" onClick={() => { const id = drawerUnit; void run(async () => { await post("/gate/checkout", { unitId: id }); setDrawerUnit(undefined); }, "Gated out, visit recorded"); }}>Gate out</button></div>}
         <div style={{ padding: "0 12px 12px" }}><button className="btn" style={{ width: "100%" }} onClick={() => { const id = drawerUnit; setDrawerUnit(undefined); go("map", id); }}><MapIcon size={15} />Show on yard map</button></div>
       </Drawer>}
       {palette && <Palette onClose={() => setPalette(false)} go={(s) => { go(s); setPalette(false); }} allowed={allowed} />}

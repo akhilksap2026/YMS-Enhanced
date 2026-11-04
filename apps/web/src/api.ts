@@ -3,13 +3,18 @@ export type { Unit, Zone, Door, Appointment, Task, Charge, ExceptionItem, Carrie
 export const TOKEN_KEY = "yms.token";
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t?: string) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
+export const SITE_KEY = "yms.site";
+export const getSite = () => localStorage.getItem(SITE_KEY) ?? "";
+export const setSite = (s?: string) => (s ? localStorage.setItem(SITE_KEY, s) : localStorage.removeItem(SITE_KEY));
+const siteH = (): Record<string, string> => (getSite() ? { "x-site": getSite() } : {});
 export class ApiError extends Error { status: number; constructor(m: string, status: number) { super(m); this.status = status; } }
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const tok = getToken(); const isForm = init?.body instanceof FormData;
-  const r = await fetch("/v1" + path, { ...init, headers: { ...(isForm ? {} : { "content-type": "application/json" }), ...(tok ? { authorization: "Bearer " + tok } : {}) } });
+  const r = await fetch("/v1" + path, { ...init, headers: { ...(isForm ? {} : { "content-type": "application/json" }), ...(tok ? { authorization: "Bearer " + tok } : {}), ...siteH() } });
   if (r.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event("yms:signed-out"));
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new ApiError(j.error ?? r.statusText, r.status);
+  if (r.status === 404 && j.error === "Unknown or inactive site") { setSite(); location.reload(); }
+  if (!r.ok) throw Object.assign(new ApiError(j.error ?? r.statusText, r.status), { violations: j.violations });
   return j as T;
 }
 export const get = <T,>(p: string) => req<T>(p);
@@ -21,7 +26,8 @@ export const upload = <T,>(p: string, form: FormData) => req<T>(p, { method: "PO
 export type Role = "yard_manager" | "gate_guard" | "dock_supervisor" | "spotter" | "carrier" | "tenant_admin" | "detention_approver";
 export interface SessionUser { userId: string; tenantId: string; role: Role; roleLabel: string; name: string; perms: string[]; demo?: boolean; carrierId?: string }
 export interface SiteConfig { appointmentSource: "native" | "sap" | "otm"; features: Record<string, boolean>; brandName: string; brandLogo: string; siteName: string; rates: { detention: number; demurrage: number; freeHoursDetention: number; freeHoursDemurrage: number } }
-export interface TenantInfo { tenant: { id: string; name: string; demo: boolean }; sites: { id: string; name: string }[]; siteConfig: SiteConfig }
+export interface TenantInfo { tenant: { id: string; name: string; demo: boolean }; sites: Site[]; site?: Site; siteConfig: SiteConfig }
+export interface Site { id: string; code: string; name: string; tz: string; address?: string; active: boolean; createdAt: string }
 export interface Note { id: string; at: string; channel: string; to: string; text: string; kind: string; ref?: string; read?: boolean }
 export const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "–";
 export const hoursSince = (iso?: string) => iso ? (Date.now() - Date.parse(iso)) / 3600e3 : 0;
@@ -29,7 +35,7 @@ export const fmtDur = (h: number) => h < 1 ? `${Math.round(h * 60)}m` : h < 48 ?
 export const money = (n: number, c = "USD") => n.toLocaleString("en-US", { style: "currency", currency: c, maximumFractionDigits: 0 });
 /** Authenticated file download (CSV/XLSX). */
 export async function download(path: string, filename: string, body?: unknown) {
-  const r = await fetch("/v1" + path, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json", ...(getToken() ? { authorization: "Bearer " + getToken() } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const r = await fetch("/v1" + path, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json", ...(getToken() ? { authorization: "Bearer " + getToken() } : {}), ...siteH() }, body: body === undefined ? undefined : JSON.stringify(body) });
   if (!r.ok) { let m = r.statusText; try { m = (await r.json()).error ?? m; } catch { /* not json */ } throw new ApiError(m, r.status); }
   const url = URL.createObjectURL(await r.blob()); const a = document.createElement("a"); a.href = url; a.download = (r.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1]) ?? filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000);
 }

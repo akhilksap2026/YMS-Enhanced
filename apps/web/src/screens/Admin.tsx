@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Building2, Grid3x3, Users, Scale, Palette, Plus, Trash2, Bell } from "lucide-react";
+import { Building2, Grid3x3, Users, Scale, Palette, Plus, Trash2, Bell, CalendarClock, ScrollText } from "lucide-react";
 import NotifyAdmin from "./NotifyAdmin";
+import { SitesTab, ApptRulesTab, AuditTab } from "./AdminV4";
 import { useApp } from "../store";
 import { del, get, patch, post, put, type Role, type SiteConfig } from "../api";
 
 type U = { id: string; email: string; name: string; role: Role; active: boolean; carrier_id?: string; carrierId?: string };
 const ROLE_L: Record<Role, string> = { tenant_admin: "Tenant admin", yard_manager: "Yard manager", gate_guard: "Gate guard", dock_supervisor: "Dock supervisor", spotter: "Spotter", carrier: "Carrier", detention_approver: "Detention approver" };
-const TABS = [["site", "Sites", Building2], ["yard", "Yard layout", Grid3x3], ["users", "Users", Users], ["rules", "Rules & integrations", Scale], ["notify", "Notifications", Bell], ["brand", "Branding", Palette]] as const;
+const TABS = [["site", "Sites", Building2], ["yard", "Yard layout", Grid3x3], ["users", "Users", Users], ["appt", "Appointment rules", CalendarClock], ["rules", "Rates & source", Scale], ["notify", "Notifications", Bell], ["brand", "Branding", Palette], ["audit", "Audit log", ScrollText]] as const;
 
 export default function Admin() {
   const { tenant } = useApp(); const [tab, setTab] = useState<(typeof TABS)[number][0]>(() => (new URLSearchParams(location.search).get("tab") as never) || "yard");
@@ -14,22 +15,11 @@ export default function Admin() {
   return <div className="adm">
     <div className="ph"><h1>Tenant admin</h1><span className="meta">{tenant.tenant.name} · changes apply immediately and are audited</span></div>
     <div className="seg adm-tabs">{TABS.map(([id, l, I]) => <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}><I size={14} />{l}</button>)}</div>
-    {tab === "site" && <Site />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "notify" && <NotifyAdmin />}{tab === "brand" && <Brand />}
+    {tab === "site" && <SitesTab />}{tab === "appt" && <ApptRulesTab />}{tab === "audit" && <AuditTab />}{tab === "yard" && <Yard />}{tab === "users" && <UsersTab />}{tab === "rules" && <Rules />}{tab === "notify" && <NotifyAdmin />}{tab === "brand" && <Brand />}
   </div>;
 }
 function useCfg() { const { tenant, run, reload } = useApp(); const save = (p: Partial<SiteConfig>, msg: string) => run(async () => { await patch("/tenant/config", p); await reload(); }, msg); return { c: tenant!.siteConfig, save }; }
 
-function Site() {
-  const { tenant } = useApp(); const { c, save } = useCfg(); const [name, setName] = useState(c.siteName);
-  return <div className="grid" style={{ gridTemplateColumns: "minmax(0,1fr) 340px" }}>
-    <section className="panel"><header>Sites</header><table className="t"><thead><tr><th>Site</th><th>Time zone</th><th>Appointments from</th><th>Data residency</th></tr></thead>
-      <tbody>{tenant!.sites.map((s) => <tr key={s.id}><td><b>{s.name}</b> <span className="mu m">{s.id}</span></td><td className="mono">Africa/Bujumbura</td><td>{SRC[c.appointmentSource]}</td><td>Ksap cloud</td></tr>)}</tbody></table></section>
-    <section className="panel"><header>Edit site</header><div className="body form">
-      <label>Site name<input className="ctl" value={name} onChange={(e) => setName(e.target.value)} /></label>
-      <button className="btn pri" disabled={!name.trim() || name === c.siteName} onClick={() => save({ siteName: name.trim() }, "Site renamed")}>Save</button>
-      <p className="hint">This build runs one site per tenant. More sites are added by provisioning, so each site's data stays separate.</p></div></section>
-  </div>;
-}
 
 function Yard() {
   const { d, run, reload } = useApp(); const [nz, setNz] = useState({ name: "", slots: 10, kind: "row" as const as string });
