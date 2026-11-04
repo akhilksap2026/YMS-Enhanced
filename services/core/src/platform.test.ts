@@ -60,3 +60,15 @@ describe("tenancy + persistence", () => {
     expect(back.status).toBe("hold");
   }, 60_000);
 });
+describe("gate OCR adapter", () => {
+  it("forwards uploads to the adapter and enforces role", async () => {
+    const { setOcrAdapter } = await import("./modules/gate/ocr.ts");
+    setOcrAdapter({ health: async () => true, read: async (_b, _m, kind) => ({ container: { number: "MSKU3072946", valid: true, raw: "MSKU3072946", confidence: 0.9, suggested: null, corrections: 0 }, plate: null, confidence: 0.9, route: "auto", engine: "fake:" + kind, tokens: [], size: [1, 1] }) });
+    const g = await tok("gate.guard@ksap.example");
+    const png = Buffer.from("89504e470d0a1a0a", "hex");
+    const r = await request(app).post("/v1/gate/ocr").set("Authorization", "Bearer " + g).field("kind", "container").attach("image", png, { filename: "a.png", contentType: "image/png" });
+    expect(r.status).toBe(200); expect(r.body.engine).toBe("fake:container");
+    const s = await tok("spotter@ksap.example");
+    expect((await request(app).post("/v1/gate/ocr").set("Authorization", "Bearer " + s).attach("image", png, { filename: "a.png", contentType: "image/png" })).status).toBe(403);
+  });
+});

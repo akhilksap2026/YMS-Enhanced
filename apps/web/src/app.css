@@ -263,3 +263,10 @@ tr.click { cursor: pointer; }
 .note { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 18px 1fr 8px; gap: 10px; align-items: start; padding: 9px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .note span { display: grid; gap: 2px; } .note b { font-weight: 500; } .note small { font-size: 11px; } .note svg { color: var(--text-3); margin-top: 2px; }
 .note.unread b { font-weight: 600; } .note .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; } .note:hover { background: var(--hover); }
+.cam img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cam .ocr-boxes { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cam-busy { position: absolute; inset: 0; display: grid; place-items: center; background: #0008; color: #fff; font-weight: 600; }
+.cam-foot { display: flex; align-items: center; gap: 6px; padding-top: 6px; min-height: 30px; font-size: 12px; }
+.okm { color: var(--ok); } .warnm { color: var(--warn, var(--c-late)); }
+.pop-wrap { position: relative; } .pop { position: absolute; right: 0; bottom: 100%; margin-bottom: 4px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: var(--shadow); padding: 4px; z-index: 20; display: grid; min-width: 150px; }
+.pop button { all: unset; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; } .pop button:hover { background: var(--hover); }
