@@ -270,3 +270,24 @@ tr.click { cursor: pointer; }
 .okm { color: var(--ok); } .warnm { color: var(--warn, var(--c-late)); }
 .pop-wrap { position: relative; } .pop { position: absolute; right: 0; bottom: 100%; margin-bottom: 4px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: var(--shadow); padding: 4px; z-index: 20; display: grid; min-width: 150px; }
 .pop button { all: unset; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; } .pop button:hover { background: var(--hover); }
+
+/* Dock */
+.dock2 { display: grid; grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px; height: 100%; min-height: 0; }
+.dock2 .ph { margin: 0; }
+.dock-doors { grid-column: 1; } .dock-gantt { grid-column: 1; min-height: 0; overflow: auto; }
+.dock-side { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.dock-wait { flex: 1; min-height: 0; display: flex; flex-direction: column; } .dock-wait .scroll { flex: 1; overflow: auto; }
+.dock-doors .doors { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.kgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.kp { padding: 8px 10px; gap: 2px; } .kp .l { font-size: 11px; color: var(--text-3); display: flex; gap: 5px; align-items: center; } .kp b { font-size: 20px; letter-spacing: -.02em; } .kp small { font-size: 10.5px; }
+.dgantt { position: relative; padding: 4px 12px 8px; }
+.dg-axis { position: relative; height: 16px; margin-left: 44px; font-size: 10px; color: var(--text-3); } .dg-axis span { position: absolute; transform: translateX(-50%); }
+.dg-row { display: grid; grid-template-columns: 44px 1fr; align-items: center; height: 22px; } .dg-row b { font-size: 11px; }
+.dg-lane { position: relative; height: 16px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px calc(100% / 9)); border-radius: 3px; }
+.dg-bar { position: absolute; top: 1px; height: 14px; border-radius: 3px; font: 600 9.5px var(--mono); line-height: 14px; padding: 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--bg); }
+.dg-bar.act { background: var(--c-ok); } .dg-bar.long { background: var(--c-late); }
+.dg-bar.plan { background: transparent; border: 1px dashed var(--c-live); color: var(--c-live); line-height: 12px; }
+.dg-bar.blocked { background: repeating-linear-gradient(135deg, var(--bad-bg) 0 6px, transparent 6px 12px); color: var(--bad); }
+.dg-now { position: absolute; top: 4px; bottom: 8px; width: 1px; background: var(--accent); margin-left: 12px; }
+.lg2 { display: inline-flex; gap: 4px; align-items: center; margin-left: 10px; font-size: 10.5px; color: var(--text-3); } .lg2 i { width: 10px; height: 8px; border-radius: 2px; display: inline-block; }
+.lg2 .a { background: var(--c-ok); } .lg2 .l { background: var(--c-late); } .lg2 .p { border: 1px dashed var(--c-live); }
