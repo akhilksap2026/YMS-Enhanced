@@ -1,12 +1,13 @@
+import { DEFAULT_SITE } from "../../shared/tenancy.ts";
 import { Router } from "express";
 import type { Unit, Zone } from "../../../../../packages/contracts/index.ts";
 import { tenantRepo } from "../../shared/repo.ts";
 import { seedOf } from "../../seedcache.ts";
 import type { Carrier, ExceptionItem } from "../../../../../packages/contracts/index.ts";
-export const units = tenantRepo<Unit>("units", (t) => seedOf(t, "units"));
-export const zones = tenantRepo<Zone>("zones", (t) => seedOf(t, "zones"))
+export const units = tenantRepo<Unit>("units", (t, site) => site === DEFAULT_SITE ? seedOf(t, "units") : [], { site: true });
+export const zones = tenantRepo<Zone>("zones", (t, site) => site === DEFAULT_SITE ? seedOf(t, "zones") : [], { site: true })
 export const carriers = tenantRepo<Carrier>("carriers", (t) => seedOf(t, "carriers"));
-export const exceptions = tenantRepo<ExceptionItem>("exceptions", (t) => seedOf(t, "exceptions"));
+export const exceptions = tenantRepo<ExceptionItem>("exceptions", (t, site) => site === DEFAULT_SITE ? seedOf(t, "exceptions") : [], { site: true });
 export const raise = (x: Omit<ExceptionItem, "id" | "at"> & { id?: string }) => exceptions.put({ id: "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: new Date().toISOString(), ...x });;
 const wrap = (r: any, f: () => unknown) => { try { r.json(f()); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } };
 /** Place or lift an operational hold. Quarantine is not lifted here (needs inspection workflow). */

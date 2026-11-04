@@ -77,7 +77,7 @@ subscribe((e) => runAs(e.tenantId, () => {
   if (c.otm.enabled) enqueue("otm", "event", otm.event(e, c.otm.domain, ctx), "evt-" + e.eventId, ctx.unitNumber);
   if (c.sap.enabled) enqueue("sap", "event", sap.event(e, ctx), "evt-" + e.eventId, ctx.unitNumber);
   if (c.wms.enabled && (e.type === "DoorOccupied" || e.type === "DoorReleased")) enqueue("wms", "door", JSON.stringify({ eventId: e.eventId, type: e.type === "DoorOccupied" ? "door.occupied" : "door.released", at: e.at, site: e.siteId, door: ctx.door, unit: ctx.unitNumber, shipmentRef: ctx.shipmentRef }), "evt-" + e.eventId, ctx.door);
-}));
+}, undefined, e.siteId));
 /** Appointment changes made in YMSNow go back to the system of record. */
 export function publishAppointment(a: Appointment) {
   const c = config(); const key = `appt-${a.id}-${a.status}-${a.slotStart}`;

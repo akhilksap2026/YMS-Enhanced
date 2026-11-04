@@ -1,9 +1,10 @@
+import { DEFAULT_SITE } from "../../shared/tenancy.ts";
 import { Router } from "express";
 import type { Charge, ChargeState } from "../../../../../packages/contracts/index.ts";
 import { tenantRepo } from "../../shared/repo.ts";
 import { seedOf } from "../../seedcache.ts";
 import { publish } from "../../shared/bus.ts";
-export const charges = tenantRepo<Charge>("charges", (t) => seedOf(t, "charges"));
+export const charges = tenantRepo<Charge>("charges", (t, site) => site === DEFAULT_SITE ? seedOf(t, "charges") : [], { site: true });
 const allowed: Record<ChargeState, ChargeState[]> = {
   indicative: ["approved", "adjusted", "rejected", "under_review"], under_review: ["approved", "adjusted", "rejected"],
   adjusted: ["approved", "rejected"], approved: ["exported"], rejected: [], exported: [],

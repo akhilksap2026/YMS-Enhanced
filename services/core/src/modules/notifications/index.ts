@@ -44,7 +44,7 @@ subscribe((e) => runAs(e.tenantId, () => {
   if (e.type === "DoorOccupied") void dispatch("dock", { unit: p.unitNumber ?? p.unitId, door: p.doorLabel ?? p.doorId, ref: p.unitId }, { channel: "in_app", to: "dock team", ref: p.unitId, text: `Unit placed at door ${p.doorLabel ?? p.doorId}` });
   if (e.type === "TaskCompleted") void dispatch("task", { task: p.taskId, ref: p.taskId }, { channel: "push", to: "yard manager", ref: p.taskId, text: `Move ${p.taskId} completed` });
   if (e.type === "ChargeStateChanged") void dispatch("detention", { charge: p.chargeId, state: p.state, ref: p.chargeId }, { channel: "email", to: "carrier billing", ref: p.chargeId, text: `Charge ${p.chargeId} is now ${p.state}` });
-}));
+}, undefined, e.siteId));
 const mask = (c: NotifyConfig) => ({ ...c, email: { ...c.email, pass: c.email.pass ? "••••••" : "" }, sms: { ...c.sms, token: c.sms.token ? "••••••" : "" } });
 const bad = (m: string) => Object.assign(new Error(m), { status: 422 });
 const isEmail = (s: string) => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(s); const isPhone = (s: string) => /^\+?[0-9 ]{6,18}$/.test(s);

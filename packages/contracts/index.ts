@@ -11,6 +11,7 @@ export interface Door { id: string; label: string; state: "free" | "occupied" | 
 export interface Unit {
   id: string; number: string; kind: "trailer" | "container"; carrierId: string;
   status: Status; location: string; gateInAt?: string; load: "empty" | "loaded"; reefer?: boolean; hazmat?: string;
+  apptRef?: string; apptSlot?: string; lateMin?: number; direction?: "inbound" | "outbound";
 }
 export type AppointmentSource = "native" | "sap" | "otm";
 export interface Appointment {

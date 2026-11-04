@@ -32,7 +32,7 @@ export async function tenants() { return (await getDb().query<{ id: string; name
 export async function hydrate(tenant: string) {
   await asTenant(tenant, async (tx) => { for (const s of stores()) { if (s.table.startsWith("mem_")) continue;
     const rows = (await tx.query(`SELECT id, data FROM ${s.table}`)).rows as { id: string; data: any }[];
-    if (rows.length) { s.load(tenant, rows.map((r) => r.data)); rows.forEach((r) => snap.set(`${s.table}|${tenant}|${r.id}`, JSON.stringify(r.data))); } } });
+    if (rows.length) { s.load(tenant, rows.map((r) => r.data), rows.map((r) => r.id)); rows.forEach((r) => snap.set(`${s.table}|${tenant}|${r.id}`, JSON.stringify(r.data))); } } });
   return flush(tenant);
 }
 /** Write changed rows (diff against last write) and delete removed ones. Serialised. */
@@ -40,9 +40,9 @@ export function flush(tenant: string): Promise<number> {
   if (!db) return Promise.resolve(0);
   const p = chain.then(() => asTenant(tenant, async (tx) => { let n = 0;
     for (const s of stores()) { if (s.table.startsWith("mem_")) continue; const live = new Set<string>();
-      for (const r of s.rows(tenant)) { const k = `${s.table}|${tenant}|${r.id}`; live.add(k); const j = JSON.stringify(r);
-        if (snap.get(k) !== j) { await tx.query(`INSERT INTO ${s.table}(tenant_id,id,data,updated_at) VALUES ($1,$2,$3,now()) ON CONFLICT (tenant_id,id) DO UPDATE SET data=EXCLUDED.data, updated_at=now()`, [tenant, r.id, j]); snap.set(k, j); n++; } }
-      for (const k of [...snap.keys()]) if (k.startsWith(`${s.table}|${tenant}|`) && !live.has(k)) { await tx.query(`DELETE FROM ${s.table} WHERE id=$1`, [k.split("|")[2]]); snap.delete(k); n++; } }
+      for (const [id, r] of s.entries(tenant)) { const k = `${s.table}|${tenant}|${id}`; live.add(k); const j = JSON.stringify(r);
+        if (snap.get(k) !== j) { await tx.query(`INSERT INTO ${s.table}(tenant_id,id,data,updated_at) VALUES ($1,$2,$3,now()) ON CONFLICT (tenant_id,id) DO UPDATE SET data=EXCLUDED.data, updated_at=now()`, [tenant, id, j]); snap.set(k, j); n++; } }
+      for (const k of [...snap.keys()]) if (k.startsWith(`${s.table}|${tenant}|`) && !live.has(k)) { await tx.query(`DELETE FROM ${s.table} WHERE id=$1`, [k.split("|").slice(2).join("|")]); snap.delete(k); n++; } }
     return n; }));
   chain = p.catch((e) => console.error("flush failed", e)); return p;
 }
