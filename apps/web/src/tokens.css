@@ -1,0 +1,28 @@
+/* YMSNow design tokens. 8px grid (4px half-step for dense controls). Neutral industrial palette. */
+:root {
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
+  --r-1: 3px; --r-2: 4px;
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-lg: 15px; --fs-xl: 18px;
+  --row-h: 28px; --ctl-h: 28px;
+
+  --bg: #f3f4f5; --surface: #ffffff; --surface-2: #f8f9fa; --sunken: #eceef0;
+  --line: #dcdfe3; --line-strong: #c3c8ce;
+  --text: #1b1f24; --text-2: #4a525c; --text-3: #6b737d;   /* text-3 on surface = 4.7:1 */
+  --nav-bg: #1f2429; --nav-text: #c9ced4; --nav-active: #ffffff; --nav-hi: #2e353c;
+  --accent: #1f5fa8; --accent-weak: #e6eef8; --focus: #2b74d1;
+
+  --ok: #1d7a46; --ok-bg: #e3f3e9;
+  --warn: #8a5a00; --warn-bg: #fdf0d3;
+  --hold: #a34a00; --hold-bg: #fde4d0;
+  --bad: #b42318; --bad-bg: #fbe3e1;
+  --idle: #6b737d; --idle-bg: #eceef0;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { font: var(--fs-md)/1.4 var(--font); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.mono { font-family: var(--mono); font-size: var(--fs-sm); }
+.num { font-variant-numeric: tabular-nums; text-align: right; }
