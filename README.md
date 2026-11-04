@@ -22,3 +22,8 @@ Restart core to reset demo data.
 
 ## Keyboard
 Ctrl/Cmd K command palette · / search · Alt 1–6 screens · Gate: Alt P pass, Alt H hold, Alt Q quarantine, arrow keys in queue · Detention inline edit: Enter save, Esc cancel.
+
+## UI v2 (design system)
+Token-based dark/light themes (top-bar toggle, remembers choice, follows OS by default), Lucide icons, collapsible rail, drawers, reduced-motion aware.
+Screens: control tower (live flow + customisable widgets), 2.5D yard map (pan/zoom, select, drag-to-move, hold/release, plan/heat), gate console, mobile spotter (slide-to-confirm), dock, carrier, detention.
+Screenshots: `python3 scripts/screenshots_v2.py` → `screenshots/v2/`.
