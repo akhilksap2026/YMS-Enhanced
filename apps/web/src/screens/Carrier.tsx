@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { useApp } from "../store";
 import { fmtTime, post } from "../api";
 
-const ME = "c2"; // demo carrier login
+// carrier sees own appointments (server filters by the signed-in carrier)
 export default function Carrier() {
-  const { d, run, carrier } = useApp();
+  const { d, run, carrier, user } = useApp(); const ME = user.carrierId ?? "c2";
   const mine = d.appointments.filter((a) => a.carrierId === ME).sort((a, b) => b.slotStart.localeCompare(a.slotStart));
   const [dir, setDir] = useState<"inbound" | "outbound">("inbound");
   const [unitNo, setUnit] = useState(""); const [plate, setPlate] = useState("");

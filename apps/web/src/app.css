@@ -240,3 +240,26 @@ tr.click { cursor: pointer; }
 .sp-tabs { margin-top: auto; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding-top: 6px; }
 .sp-tabs span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--text-3); } .sp-tabs .on { color: var(--accent); }
 @media (max-width: 600px) { .rail { display: none; } .topbar .search, .topbar .chip, .topbar select { display: none; } }
+
+/* Login */
+.login { position: fixed; inset: 0; display: grid; grid-template-columns: 1.2fr 1fr; background: var(--bg); }
+.login-art { position: relative; overflow: hidden; background: var(--map-bg); border-right: 1px solid var(--line); }
+.la-grid { position: absolute; inset: -20%; background-image: linear-gradient(var(--map-grid) 1px, transparent 1px), linear-gradient(90deg, var(--map-grid) 1px, transparent 1px); background-size: 36px 36px; transform: perspective(700px) rotateX(55deg) rotateZ(-30deg); }
+.login-art i { position: absolute; width: 44px; height: 18px; border-radius: 3px; opacity: .85; animation: rise 3.4s var(--ease) infinite alternate; box-shadow: 0 6px 0 color-mix(in srgb, black 35%, transparent); }
+.la-copy { position: absolute; left: 48px; bottom: 48px; display: grid; gap: 6px; } .la-copy b { font-size: 28px; letter-spacing: -.02em; } .la-copy span { color: var(--text-2); }
+.login-card { align-self: center; justify-self: center; width: min(380px, 90vw); display: grid; gap: 12px; }
+.login-card .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; } .login-card .logo b { width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: var(--bg); display: grid; place-items: center; }
+.login-card h1 { margin: 8px 0 0; font-size: 22px; } .login-card p { margin: 0; }
+.pw { display: flex; gap: 4px; } .pw .ctl { flex: 1; }
+.or { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; color: var(--text-3); font-size: 11px; } .or::before, .or::after { content: ""; height: 1px; background: var(--line); }
+.login-card .btn.lg { height: 42px; justify-content: center; }
+@media (max-width: 800px) { .login { grid-template-columns: 1fr; } .login-art { display: none; } }
+.brand-logo { width: 28px; height: 28px; border-radius: 7px; object-fit: contain; background: var(--surface-2); }
+.bell { position: relative; } .bell em { position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; border-radius: 8px; background: var(--c-bad); color: #fff; font: 600 9.5px var(--font); font-style: normal; display: grid; place-items: center; padding: 0 3px; }
+.who { display: flex; align-items: center; gap: 8px; } .who span { display: grid; line-height: 1.15; } .who b { font-size: 12px; } .who small { font-size: 10.5px; color: var(--text-3); }
+@media (max-width: 1200px) { .who span { display: none; } }
+.notes-bar { padding: 8px 12px; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.notes { display: grid; }
+.note { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 18px 1fr 8px; gap: 10px; align-items: start; padding: 9px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.note span { display: grid; gap: 2px; } .note b { font-weight: 500; } .note small { font-size: 11px; } .note svg { color: var(--text-3); margin-top: 2px; }
+.note.unread b { font-weight: 600; } .note .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; } .note:hover { background: var(--hover); }
