@@ -53,3 +53,10 @@ def test_upload_endpoint_and_errors():
     assert r.status_code == 200 and r.json()["container"]["valid"]
     assert c.post("/v1/read/image", files={"file": ("a.txt", b"hello", "text/plain")}).status_code == 422
     assert c.get("/health").json()["engine"].startswith("pp-ocr")
+
+
+def test_plate_repair_confusions():
+    from engine import repair_plate
+    assert repair_plate("XX-341-1Z") == ("XX-341-IZ", 1)
+    assert repair_plate("K5-7Z5-A8") == ("KS-725-AB", 3)
+    assert repair_plate("AB12CD")[1] == 0

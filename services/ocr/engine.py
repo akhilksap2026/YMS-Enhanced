@@ -90,6 +90,19 @@ def find_container(toks: list[Token]) -> dict | None:
     return best
 
 
+_TO_L = str.maketrans("01258", "OIZSB"); _TO_D = str.maketrans("OIQDZSBG", "01102586")
+SIV_RE = re.compile(r"[A-Z0-9]{2}-[A-Z0-9]{3}-[A-Z0-9]{2}")
+
+
+def repair_plate(p: str) -> tuple[str, int]:
+    """Fix I/1, O/0, Z/2, S/5, B/8 swaps on plates in the AA-123-AA shape (letters, digits, letters)."""
+    if not SIV_RE.fullmatch(p):
+        return p, 0
+    a, d, b = p.split("-")
+    out = f"{a.translate(_TO_L)}-{d.translate(_TO_D)}-{b.translate(_TO_L)}"
+    return out, sum(x != y for x, y in zip(p, out))
+
+
 def find_plate(toks: list[Token], exclude: str | None = None) -> dict | None:
     cands = []
     for t in toks:
@@ -97,10 +110,10 @@ def find_plate(toks: list[Token], exclude: str | None = None) -> dict | None:
         if exclude and txt.replace(" ", "").replace("-", "") in exclude:
             continue
         for m in PLATE_RE.finditer(txt):
-            p = m.group(0).replace(" ", "-")
+            p, fixes = repair_plate(m.group(0).replace(" ", "-"))
             if 5 <= len(p.replace("-", "")) <= 9 and not CONTAINER_RE.fullmatch(p.replace("-", "")):
                 h = abs(t.box[2][1] - t.box[0][1])
-                cands.append({"plate": p, "confidence": round(t.score, 3), "_h": h})
+                cands.append({"plate": p, "confidence": round(t.score * (0.97 ** fixes), 3), "corrections": fixes, "_h": h})
     if not cands:
         return None
     best = max(cands, key=lambda c: (c["_h"] * c["confidence"]))  # biggest confident text block
