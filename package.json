@@ -4,9 +4,10 @@
   "scripts": {
     "core": "npm --prefix services/core start",
     "web": "npm --prefix apps/web run dev",
-    "ocr": "cd services/ocr && .venv/bin/uvicorn main:app --port 4100",
+    "ocr": "cd services/ocr && .venv/bin/uvicorn main:app --port 8001",
     "test": "npm --prefix services/core test && cd services/ocr && .venv/bin/python -m pytest -q",
     "typecheck": "npm --prefix services/core run typecheck && cd apps/web && npx tsc -b",
-    "screenshots": "python3 scripts/screenshots.py && python3 scripts/smoke_e2e.py"
+    "screenshots": "python3 scripts/screenshots_v3.py",
+    "seed": "npm --prefix services/core run seed"
   }
 }

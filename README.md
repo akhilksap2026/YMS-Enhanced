@@ -1,29 +1,46 @@
-# YMSNow (iteration 1)
+# YMSNow (iteration 3)
 
-Foundation and UI shell for the YMSNow yard management product. All data is fictitious demo data.
+Yard management application: gate, yard, dock, spotter, carrier appointments, indicative detention, notifications, tenant admin, demo mode and an AI-tier preview. All data is fictitious.
 
 ## Layout
-- `packages/contracts` shared v1 domain types and canonical event envelope (eventId, tenant/site, aggregate version).
-- `services/core` Node + TypeScript (Express) modular monolith. One folder per bounded context under `src/modules`: tenant, appointments (pluggable source adapter: native / SAP stub / OTM stub), gate, yard, dock, tasks (versioned, offline-conflict rule), detention (indicative charges, approval state machine, audit history), notifications (outbox). In-process event bus with idempotency; in-memory repositories behind a `Repo` interface (Postgres adapter is next; Docker is not available on this box).
-- `services/ocr` Python FastAPI stub behind the OCR adapter contract, with ISO 6346 validator and confidence routing (`auto` vs `guard_confirm`).
-- `apps/web` React + TypeScript + Vite. Design tokens in `src/tokens.css` (8px grid, compact 28px rows, neutral palette, status colours).
+- `packages/contracts` shared domain types and event envelope.
+- `services/core` Node + TypeScript (Express) modular monolith, one folder per bounded context under `src/modules`: auth, tenant, admin, appointments (source adapter: native / SAP TM-EWM / Oracle OTM), gate (+ OCR adapter), yard, dock, tasks (versioned, offline conflict rule), detention (indicative charges → approval → CSV export), notifications (outbox), demo.
+  - **Persistence:** Postgres via embedded **PGlite** (`services/core/data/pg`). A system Postgres couldn't be installed on this box (apt mirror unavailable). Migrations are in `services/core/migrations`. Every table has `tenant_id` with forced row-level security (`app.tenant` + `app_user` role). Repositories keep the same synchronous interface, so modules didn't change. To move to managed Postgres, swap `shared/db.ts`.
+  - **Auth:** JWT (12 h). Permissions are checked server-side in `shared/authz.ts`, and the UI filters navigation by role.
+- `services/ocr` native Python: OpenCV preprocessing + RapidOCR (PP-OCR, ONNX, runs offline), ISO 6346 check-digit repair, confidence routing (`auto` ≥ 0.85 and valid, otherwise `guard_confirm`). Core calls it through `modules/gate/ocr.ts`.
+- `apps/web` React + Vite, token-based light/dark design system.
 
 ## Run
 ```
 npm --prefix services/core install && npm --prefix apps/web install
-python3 -m venv services/ocr/.venv && services/ocr/.venv/bin/pip install fastapi uvicorn pytest httpx
-npm run core      # :4000
-npm run web       # :5173 (proxies /v1 to core)
-npm run ocr       # :4100 (optional, not yet called by core)
-npm test
-npm run screenshots   # needs core + web running
+python3 -m venv services/ocr/.venv && services/ocr/.venv/bin/pip install -r services/ocr/requirements.txt
+npm run seed          # optional; first start seeds automatically. `npm run seed -- --fresh` wipes and reseeds
+npm run core          # :4000
+npm run ocr           # :8001 (gate OCR upload)
+npm run web           # :5173, proxies /v1 to core
+npm test              # core vitest + OCR pytest
+npm run screenshots   # needs all three running → screenshots/v3/
 ```
-Restart core to reset demo data.
+Data persists across restarts. Synthetic OCR samples: `services/ocr/make_samples.py` → `services/ocr/samples/`.
+
+## Demo users (operations tenant `t-ksap`)
+Password for all: `Ymsnow!2026`. These are local demo credentials only. Change or remove them before any real deployment, e.g. set `JWT_SECRET` and create real users in Tenant admin.
+
+| Role | Email |
+|---|---|
+| Yard manager | yard.manager@ksap.example |
+| Gate guard | gate.guard@ksap.example |
+| Dock supervisor | dock.supervisor@ksap.example |
+| Spotter | spotter@ksap.example |
+| Carrier (Coastal, c2) | carrier@ksap.example |
+| Tenant admin | tenant.admin@ksap.example |
+| Detention approver | detention.approver@ksap.example |
+
+## Demo mode
+Click "Start demo" on the login screen. It uses a separate `t-demo` tenant ("Acme Logistics" branding, rich scripted data); RLS and a server guard keep it away from real tenant data.
+- The DEMO badge menu has: guided tour, live simulation (generates arrivals, moves and alerts), reset demo data, and exit.
+- "View as" switches role instantly.
+- The tour has 15 spotlighted steps covering every capability. Use ← → to move between steps and Esc to close. `?step=N` deep-links a step.
 
 ## Keyboard
-Ctrl/Cmd K command palette · / search · Alt 1–6 screens · Gate: Alt P pass, Alt H hold, Alt Q quarantine, arrow keys in queue · Detention inline edit: Enter save, Esc cancel.
-
-## UI v2 (design system)
-Token-based dark/light themes (top-bar toggle, remembers choice, follows OS by default), Lucide icons, collapsible rail, drawers, reduced-motion aware.
-Screens: control tower (live flow + customisable widgets), 2.5D yard map (pan/zoom, select, drag-to-move, hold/release, plan/heat), gate console, mobile spotter (slide-to-confirm), dock, carrier, detention.
-Screenshots: `python3 scripts/screenshots_v2.py` → `screenshots/v2/`.
+Ctrl/Cmd K command palette · / search · Alt 1–9 screens · Gate: Alt P pass, Alt H hold, Alt Q quarantine.

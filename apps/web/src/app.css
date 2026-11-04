@@ -209,7 +209,7 @@ tr.click { cursor: pointer; }
 .arr { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .arr:hover { background: var(--hover); } .arr.on { background: var(--sel); box-shadow: inset 3px 0 var(--accent); }
 .arr .t { color: var(--text-2); } .arr b { display: block; font-size: 12px; } .arr small { display: block; font-size: 11px; }
-.cams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; }
+.cams { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 10px 12px; }
 .cam { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-strong); aspect-ratio: 4 / 3; }
 .cam svg { width: 100%; height: 100%; display: block; }
 .cam .cl, .cam .cr { position: absolute; top: 6px; font-size: 10px; background: #000a; color: #fff; padding: 1px 6px; border-radius: 3px; } .cam .cl { left: 6px; } .cam .cr { right: 6px; color: #fbbf24; }
@@ -329,3 +329,4 @@ tr.click { cursor: pointer; }
 .brand-prev { display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 8px; } .brand-prev img, .brand-prev b { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
 .sp-off { display: inline-flex; gap: 4px; align-items: center; font: 600 11px var(--mono); color: var(--warn); background: var(--warn-bg); border: 0; border-radius: 10px; padding: 2px 8px; cursor: pointer; }
 .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+.cam-wrap { min-width: 0; } .cam img { width: 100%; height: 100%; object-fit: cover; }
