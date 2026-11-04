@@ -6,6 +6,8 @@ import { seedOf } from "../../seedcache.ts";
 import { units } from "../yard/index.ts";
 import { publish } from "../../shared/bus.ts";
 import { doorVisits } from "../reports/history.ts";
+import { body, id } from "../../shared/validate.js";
+import { z } from "zod";
 export const doors = tenantRepo<Door>("doors", (t, site) => site === DEFAULT_SITE ? seedOf(t, "doors") : [], { site: true });
 export function assign(doorId: string, unitId: string) {
   const d = doors.get(doorId); const u = units.get(unitId);
@@ -29,5 +31,5 @@ export function release(doorId: string) {
 const wrap = (f: () => unknown) => (_q: any, r: any) => { try { r.json(f()); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } };
 export const router = Router()
   .get("/doors", (_q, r) => r.json(doors.all()))
-  .post("/doors/:id/assign", (q, r) => wrap(() => assign(q.params.id, q.body.unitId))(q, r))
+  .post("/doors/:id/assign", body(z.object({ unitId: id })), (q, r) => wrap(() => assign(String(q.params.id), q.body.unitId))(q, r))
   .post("/doors/:id/release", (q, r) => wrap(() => release(q.params.id))(q, r));

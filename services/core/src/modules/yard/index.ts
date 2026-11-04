@@ -4,6 +4,8 @@ import type { Unit, Zone } from "../../../../../packages/contracts/index.ts";
 import { tenantRepo } from "../../shared/repo.ts";
 import { seedOf } from "../../seedcache.ts";
 import type { Carrier, ExceptionItem } from "../../../../../packages/contracts/index.ts";
+import { body, id } from "../../shared/validate.js";
+import { z } from "zod";
 export const units = tenantRepo<Unit>("units", (t, site) => site === DEFAULT_SITE ? seedOf(t, "units") : [], { site: true });
 export const zones = tenantRepo<Zone>("zones", (t, site) => site === DEFAULT_SITE ? seedOf(t, "zones") : [], { site: true })
 export const carriers = tenantRepo<Carrier>("carriers", (t) => seedOf(t, "carriers"));
@@ -26,6 +28,6 @@ export const router = Router()
   .get("/zones", (_q, r) => r.json(zones.all()))
   .get("/carriers", (_q, r) => r.json(carriers.all()))
   .get("/exceptions", (_q, r) => r.json(exceptions.all().sort((a, b) => b.at.localeCompare(a.at))))
-  .post("/units/:id/hold", (q, r) => wrap(r, () => setHold(q.params.id, true, q.body?.reason)))
+  .post("/units/:id/hold", body(z.object({ reason: z.string().max(300).optional() })), (q, r) => wrap(r, () => setHold(String(q.params.id), true, q.body?.reason)))
   .post("/units/:id/release", (q, r) => wrap(r, () => setHold(q.params.id, false)))
   .post("/exceptions/:id/ack", (q, r) => { exceptions.del(q.params.id); r.json({ ok: true }); });

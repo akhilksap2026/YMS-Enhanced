@@ -103,3 +103,16 @@ describe("reports", () => {
     expect((await request(app).get("/v1/reports/turn").set(H())).body.rows[0].unit).toBe(u.number);
   });
 });
+
+describe("validation on remaining routes", () => {
+  it("rejects bad bodies with 422", async () => {
+    const { default: request } = await import("supertest");
+    const { app } = await import("./app.js");
+    const t = (await request(app).post("/v1/auth/login").send({ email: "tenant.admin@ksap.example", password: "Ymsnow!2026" })).body.token;
+    const a = (p: string, b: unknown) => request(app).post("/v1" + p).set("authorization", "Bearer " + t).send(b as object);
+    expect((await a("/tasks", { to: "A-01" })).status).toBe(422);
+    expect((await a("/dock/doors/D1/assign", {})).status).toBe(422);
+    expect((await a("/detention/charges/x/approve", { amount: -5 })).status).toBe(422);
+    expect((await a("/yard/units/u1/hold", { reason: "x".repeat(400) })).status).toBe(422);
+  });
+});

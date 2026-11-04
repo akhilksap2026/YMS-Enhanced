@@ -6,6 +6,8 @@ import { seedOf } from "../../seedcache.ts";
 import { publish } from "../../shared/bus.ts";
 import { units, slotByLabel, vacate } from "../yard/index.ts";
 import { doors, assign as assignDoor } from "../dock/index.ts";
+import { body, id } from "../../shared/validate.js";
+import { z } from "zod";
 export const tasks = tenantRepo<Task>("tasks", (t, site) => site === DEFAULT_SITE ? seedOf(t, "tasks") : [], { site: true });
 /** Offline-safe transition: client sends the version it saw. Superseded completions are accepted as facts and flagged. */
 export function transition(id: string, to: Task["status"], seenVersion: number, assignee?: string) {
@@ -44,5 +46,5 @@ function complete(t: Task) {
 }
 export const router = Router()
   .get("/", (_q, r) => r.json(tasks.all()))
-  .post("/", (q, r) => { try { r.status(201).json(createMove(q.body)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } })
-  .post("/:id/:to", (q, r) => { try { r.json(transition(q.params.id, q.params.to as Task["status"], Number(q.body.version), q.body.assignee)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });
+  .post("/", body(z.object({ unitId: id, to: z.string().trim().min(1).max(32), priority: z.coerce.number().int().min(1).max(3).optional(), note: z.string().max(500).optional() }).passthrough()), (q, r) => { try { r.status(201).json(createMove(q.body)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } })
+  .post("/:id/:to", body(z.object({ version: z.coerce.number().int().nonnegative(), assignee: z.string().max(64).optional() })), (q, r) => { try { r.json(transition(String(q.params.id), String(q.params.to) as Task["status"], Number(q.body.version), q.body.assignee)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });

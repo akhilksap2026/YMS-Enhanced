@@ -4,6 +4,8 @@ import type { Charge, ChargeState } from "../../../../../packages/contracts/inde
 import { tenantRepo } from "../../shared/repo.ts";
 import { seedOf } from "../../seedcache.ts";
 import { publish } from "../../shared/bus.ts";
+import { body, id } from "../../shared/validate.js";
+import { z } from "zod";
 export const charges = tenantRepo<Charge>("charges", (t, site) => site === DEFAULT_SITE ? seedOf(t, "charges") : [], { site: true });
 const allowed: Record<ChargeState, ChargeState[]> = {
   indicative: ["approved", "adjusted", "rejected", "under_review"], under_review: ["approved", "adjusted", "rejected"],
@@ -21,4 +23,4 @@ export function decide(id: string, action: ChargeState, by: string, reason?: str
 }
 export const router = Router()
   .get("/charges", (_q, r) => r.json(charges.all()))
-  .post("/charges/:id/:action", (q, r) => { try { r.json(decide(q.params.id, q.params.action as ChargeState, q.body.by ?? "demo.user", q.body.reason, q.body.amount)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });
+  .post("/charges/:id/:action", body(z.object({ by: z.string().max(64).optional(), reason: z.string().max(500).optional(), amount: z.coerce.number().nonnegative().max(1e6).optional() })), (q, r) => { try { r.json(decide(String(q.params.id), String(q.params.action) as ChargeState, q.body.by ?? "demo.user", q.body.reason, q.body.amount)); } catch (e: any) { r.status(e.status ?? 400).json({ error: e.message }); } });
