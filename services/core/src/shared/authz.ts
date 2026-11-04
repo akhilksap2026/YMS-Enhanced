@@ -1,5 +1,5 @@
 import type { Role } from "./tenancy.ts";
-export type Perm = "ops:read" | "carrier:read" | "yard:write" | "dock:write" | "tasks:create" | "tasks:transition" | "gate:write" | "appt:write" | "detention:read" | "detention:decide" | "admin" | "notes:read";
+export type Perm = "session" | "ops:read" | "carrier:read" | "yard:write" | "dock:write" | "tasks:create" | "tasks:transition" | "gate:write" | "appt:write" | "detention:read" | "detention:decide" | "admin" | "notes:read";
 const ALL: Perm[] = ["ops:read", "carrier:read", "yard:write", "dock:write", "tasks:create", "tasks:transition", "gate:write", "appt:write", "detention:read", "detention:decide", "admin", "notes:read"];
 export const ROLE_PERMS: Record<Role, Perm[]> = {
   tenant_admin: ALL,
@@ -12,7 +12,8 @@ export const ROLE_PERMS: Record<Role, Perm[]> = {
 };
 // First match wins. Paths are relative to /v1.
 const RULES: [string, RegExp, Perm][] = [
-  ["GET", /^\/(tenant|yard\/carriers)/, "carrier:read"],
+  ["GET", /^\/tenant\/?$/, "session"], // branding + site config: any signed-in user
+  ["GET", /^\/yard\/carriers/, "carrier:read"],
   ["GET", /^\/appointments/, "carrier:read"],
   ["POST", /^\/appointments/, "appt:write"],
   ["GET", /^\/notifications/, "notes:read"], ["POST", /^\/notifications/, "notes:read"],
@@ -25,4 +26,4 @@ const RULES: [string, RegExp, Perm][] = [
   ["GET", /./, "ops:read"],
 ];
 export function required(method: string, path: string): Perm { for (const [m, re, p] of RULES) if ((m === "*" || m === method) && re.test(path)) return p; return "admin"; }
-export const can = (role: Role, p: Perm) => ROLE_PERMS[role]?.includes(p) ?? false;
+export const can = (role: Role, p: Perm) => p === "session" ? role in ROLE_PERMS : ROLE_PERMS[role]?.includes(p) ?? false;

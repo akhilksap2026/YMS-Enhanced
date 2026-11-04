@@ -25,6 +25,12 @@ describe("auth", () => {
     const appts = (await request(app).get("/v1/appointments").set("Authorization", "Bearer " + c)).body as { carrierId: string }[];
     expect(appts.length).toBeGreaterThan(0); expect(appts.every((a) => a.carrierId === "c2")).toBe(true);
   });
+  it("every role can read tenant branding/config (app shell needs it)", async () => {
+    for (const e of ["spotter@", "carrier@", "gate.guard@", "detention.approver@"]) {
+      const t = await tok(e + "ksap.example"); expect((await request(app).get("/v1/tenant").set("authorization", "Bearer " + t)).status).toBe(200);
+      expect((await request(app).patch("/v1/tenant/config").set("authorization", "Bearer " + t).send({ brandName: "x" })).status).toBe(403);
+    }
+  });
   it("demo role switch only for demo sessions", async () => {
     const y = await tok("yard.manager@ksap.example");
     expect((await request(app).post("/v1/auth/demo/role").set("Authorization", "Bearer " + y).send({ role: "tenant_admin" })).status).toBe(403);

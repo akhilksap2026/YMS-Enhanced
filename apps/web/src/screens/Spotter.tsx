@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CloudOff, RefreshCw } from "lucide-react";
+import { enqueue, list, overlay, sync, isNetworkError, type Pending } from "../offline/queue";
 import { ChevronsRight, Snowflake, Flame, ListTodo, Map as MapIcon, User, ScanLine } from "lucide-react";
 import { useApp } from "../store";
 import { fmtTime, post, type Task } from "../api";
@@ -6,12 +8,23 @@ import { locRect, center, routeFor } from "../yard/geo";
 
 const NEXT: Partial<Record<Task["status"], [Task["status"], string]>> = { open: ["assigned", "Slide to accept"], assigned: ["in_progress", "Slide to start move"], in_progress: ["done", "Slide to confirm drop"] };
 export default function Spotter() {
-  const { d, run, unit } = useApp();
-  const mine = d.tasks.filter((t) => t.status !== "done" && (!t.assignee || t.assignee === "Spotter 1")).sort((a, b) => (b.status === "in_progress" ? 1 : 0) - (a.status === "in_progress" ? 1 : 0) || a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
+  const { d, unit, toast, reload } = useApp();
+  const [q, setQ] = useState<Pending[]>([]); const [net, setNet] = useState(navigator.onLine); const [busy, setBusy] = useState(false);
+  const refreshQ = useCallback(() => list().then(setQ).catch(() => setQ([])), []);
+  const doSync = useCallback(async () => { if (!(await list()).length) return; setBusy(true); try { const r = await sync();
+      if (r.sent) toast(`Synced ${r.sent} queued step${r.sent > 1 ? "s" : ""}`); r.rejected.forEach((x) => toast(`${x.label}: ${x.reason}`, true)); setNet(r.remaining === 0); await reload(); } finally { setBusy(false); await refreshQ(); } }, [toast, reload, refreshQ]);
+  useEffect(() => { void refreshQ().then(() => { if (navigator.onLine) void doSync(); }); const on = () => { setNet(true); void doSync(); }, off = () => setNet(false);
+    addEventListener("online", on); addEventListener("offline", off); const t = setInterval(() => { if (navigator.onLine) void doSync(); }, 15000);
+    return () => { removeEventListener("online", on); removeEventListener("offline", off); clearInterval(t); }; }, []); // eslint-disable-line
+  const tasks = overlay(d.tasks, q);
+  const mine = tasks.filter((t) => t.status !== "done" && (!t.assignee || t.assignee === "Spotter 1")).sort((a, b) => (b.status === "in_progress" ? 1 : 0) - (a.status === "in_progress" ? 1 : 0) || a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
   const t = mine[0]; const u = t && unit(t.unitId);
-  const act = (t: Task) => { const n = NEXT[t.status]!; return run(() => post(`/tasks/${t.id}/${n[0]}`, { version: t.version, assignee: "Spotter 1" }), `${unit(t.unitId)?.number}: ${n[0].replace("_", " ")}`); };
+  const act = async (t: Task) => { const n = NEXT[t.status]!; const label = `${unit(t.unitId)?.number}: ${n[0].replace("_", " ")}`; const body = { version: t.version, assignee: "Spotter 1" };
+    const queue = async () => { await enqueue({ taskId: t.id, to: n[0], ...body, at: new Date().toISOString(), label }); setNet(false); await refreshQ(); toast(`${label} · saved offline, will sync`); return true; };
+    if (q.length || !navigator.onLine) return queue(); // keep order: never overtake queued steps
+    try { await post(`/tasks/${t.id}/${n[0]}`, body); toast(label); await reload(); return true; } catch (e) { if (isNetworkError(e)) return queue(); toast((e as Error).message, true); await reload(); return false; } };
   return (<div className="spot2">
-    <div className="sp-top"><div><b>My moves</b><small className="mu">Spotter 1 · YT-03</small></div><span className="live"><i />online</span></div>
+    <div className="sp-top"><div><b>My moves</b><small className="mu">Spotter 1 · YT-03</small></div>{net && !q.length ? <span className="live"><i />online</span> : <button className="sp-off" onClick={() => void doSync()} disabled={busy}>{busy ? <RefreshCw size={12} className="spin" /> : <CloudOff size={12} />}{net ? "syncing" : "offline"}{q.length ? ` · ${q.length} queued` : ""}</button>}</div>
     {t && u ? <div className="sp-job enter" key={t.id}>
       <div className="row" style={{ justifyContent: "space-between" }}><span className={"tag " + (t.priority === 1 ? "t-late" : "t-idle")}>P{t.priority} · {t.type}</span><span className="mu m" style={{ fontSize: 12 }}>{t.status.replace("_", " ")} · {fmtTime(t.createdAt)}</span></div>
       <div className="sp-route m"><span>{t.from}</span><ChevronsRight size={26} /><span style={{ color: "var(--accent)" }}>{t.to}</span></div>
