@@ -132,6 +132,7 @@ describe("live detention accrual", () => {
     const ch = (await request(app).get("/v1/detention/charges").set(H())).body.filter((c: any) => c.id.startsWith("acc-")); expect(ch.every((c: any) => c.state === "indicative")).toBe(true);
     await request(app).post(`/v1/detention/charges/${ch[0].id}/approved`).set(H()).send({});
     const s2 = (await request(app).post("/v1/detention/accrual/sync").set(H())).body; expect(s2.skippedDecided).toBe(1);
+    expect((await request(app).post("/v1/detention/profiles").set(H()).send({ ...P, id: "c1-special", name: "Carrier c1 special", carrierId: "c1" })).status).toBeLessThan(300);
     expect((await request(app).get("/v1/detention/profiles").set(H())).body.map((p: any) => p.id)).toContain("c1-special");
   });
 });
